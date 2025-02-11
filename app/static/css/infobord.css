@@ -1,6 +1,15 @@
 table td, table th {
     border-style: solid;
     border-width: 1px;
+    padding: 4px;
+}
+
+table td {
+    border-bottom-style: none;
+}
+
+table tr:last-child td {
+    border-bottom-style: solid;
 }
 
 .btn {
@@ -12,15 +21,13 @@ table td, table th {
     margin: auto;
 }
 
+#info-table table {
+    border-spacing: 0;
+}
+
 input {
     margin-top: 0;
 }
-
-/*#info-save {*/
-/*    padding: 8px 35px;*/
-/*    border-radius: 48px 0px;*/
-/*    border: 0px solid #6C8003;*/
-/*}*/
 
 @keyframes blink {
     0%, 100% {
@@ -36,3 +43,4 @@ input {
     color: white;
     animation: blink 3s linear infinite;
 }
+

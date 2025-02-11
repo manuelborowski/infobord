@@ -34,3 +34,11 @@ def edit():
         dl.inforbord.delete_m(objs=infos)
         return {}
     return render_template("infobord.html", global_data={"school": school, "info": infos})
+
+@bp_infobord.route('/infobordview', methods=['GET'])
+def view():
+    school = request.args.get("school")
+    font_size = request.args.get("fontsize")
+    infos = dl.inforbord.get_m(("school", "=", school))
+    infos = [i.to_dict() for i in infos]
+    return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"], "font_size": font_size})
