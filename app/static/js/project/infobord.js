@@ -180,7 +180,10 @@ const button_menu_items = [
 ]
 
 $(document).ready(function () {
-    base_init({button_menu_items});
+    if (current_user.level < 3)
+        base_init({});
+    else
+        base_init({button_menu_items});
     __draw_table(global_data.info);
 });
 

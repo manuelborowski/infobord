@@ -1,9 +1,9 @@
 import {ButtonMenu} from "./common/button_menu.js";
 
 var menu = [
-    ["infobord.edit", "SUM", 3, {"school": "sum"}],
-    ["infobord.edit", "SUL", 3, {"school": "sul"}],
-    ["infobord.edit", "SUI", 3, {"school": "sui"}],
+    ["infobord.edit", "SUM", 1, {"school": "sum"}],
+    ["infobord.edit", "SUL", 1, {"school": "sul"}],
+    ["infobord.edit", "SUI", 1, {"school": "sui"}],
     ["user.show", "Gebruikers", 5],
     ["settings.show", "Instellingen", 5],
 ]

@@ -13,8 +13,9 @@ from functools import wraps
 
 # 0.1 clone from laptop incident systeem 0.70
 # 0.2 able to add vervaningen
+# 0.3: gebruikers can only view
 
-version = "0.2"
+version = "0.3"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
