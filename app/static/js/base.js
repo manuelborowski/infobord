@@ -1,13 +1,11 @@
 import {ButtonMenu} from "./common/button_menu.js";
 
 var menu = [
-    ["incident.show", "Overzicht", 1],
-    ["history.show", "Historiek", 1],
-    ["spare.show", "Reserves", 3],
-    ["lisbadge.show", "LIS badges", 3],
+    ["infobord.edit", "SUM", 3, {"school": "sum"}],
+    ["infobord.edit", "SUL", 3, {"school": "sul"}],
+    ["infobord.edit", "SUI", 3, {"school": "sui"}],
     ["user.show", "Gebruikers", 5],
     ["settings.show", "Instellingen", 5],
-    ["incident.help", "Help", 1],
 ]
 
 export const inject_menu = new_menu => {
@@ -64,7 +62,7 @@ export const base_init = ({button_menu_items=[]}) => {
                 dd_ctr++;
             } else {
                 // regular menu-item
-                const url_path = Flask.url_for(item[0]);
+                const url_path = item[3] ?  Flask.url_for(item[0], item[3]) : Flask.url_for(item[0]);
                 li.classList.add("nav-item");
                 const a = document.createElement("a");
                 a.classList.add("nav-link");
@@ -78,29 +76,6 @@ export const base_init = ({button_menu_items=[]}) => {
             navbar_element.appendChild(li);
         }
     }
-
-    if (stand_alone) {
-        const btn_div = document.createElement("div");
-        btn_div.classList.add("nav-buttons");
-        const sync_btn = document.createElement("button");
-        sync_btn.classList.add("btn", "btn-warning");
-        sync_btn.type = "button";
-        sync_btn.onclick = start_sync;
-        sync_btn.innerHTML = "Sync";
-        btn_div.appendChild(sync_btn);
-        navbar_element.appendChild(btn_div);
-
-        // const upgrade_div = document.createElement("div");
-        // upgrade_div.classList.add("nav-buttons");
-        // const upgade_btn = document.createElement("button");
-        // upgade_btn.classList.add("btn", "btn-warning");
-        // upgade_btn.type = "button";
-        // upgade_btn.onclick = start_upgrade;
-        // upgade_btn.innerHTML = "Upgrade";
-        // upgrade_div.appendChild(upgade_btn);
-        // navbar_element.appendChild(upgrade_div);
-    }
-
     const button_menu = new ButtonMenu(document.querySelector(".button-menu-placeholder"), button_menu_items);
 }
 

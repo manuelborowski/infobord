@@ -42,14 +42,13 @@ def user():
 def form():
     try:
         params = request.args
-        template = dl.settings.get_configuration_setting("popup-new-update-user")
         defaults = {}
         if "user_id" in params:
             user = dl.user.get(("id", "=", params["user_id"]))
             defaults = user.to_dict()
             defaults["level"] = {"default": defaults["level"]}
             defaults["user_type"] = {"default": defaults["user_type"]}
-        return {"template": template, "defaults": defaults}
+        return {"template": user_popup, "defaults": defaults}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: Exception, {e}')
         return fetch_return_error(f'Exception, {e}')
@@ -78,3 +77,200 @@ class Config(DatatableConfig):
 
 config = Config("user", "Gebruikers")
 
+false = False
+true = True
+null = None
+
+user_popup = {
+  "display": "form",
+  "components": [
+    {
+      "title": "Gebruiker",
+      "collapsible": false,
+      "key": "gebruiker",
+      "type": "panel",
+      "label": "Panel",
+      "input": false,
+      "tableView": false,
+      "components": [
+        {
+          "label": "Gebruikersnaam",
+          "labelPosition": "left-left",
+          "tableView": true,
+          "key": "username",
+          "type": "textfield",
+          "input": true
+        },
+        {
+          "label": "Achternaam",
+          "labelPosition": "left-left",
+          "tableView": true,
+          "key": "last_name",
+          "type": "textfield",
+          "input": true
+        },
+        {
+          "label": "Voornaam",
+          "labelPosition": "left-left",
+          "tableView": true,
+          "key": "first_name",
+          "type": "textfield",
+          "input": true
+        },
+        {
+          "label": "E-mail",
+          "labelPosition": "left-left",
+          "tableView": true,
+          "key": "email",
+          "type": "email",
+          "input": true
+        },
+        {
+          "label": "Niveau",
+          "labelPosition": "left-left",
+          "widget": "choicesjs",
+          "tableView": true,
+          "defaultValue": 1,
+          "data": {
+            "values": [
+              {
+                "label": "Gebruiker",
+                "value": "1"
+              },
+              {
+                "label": "Secretariaat",
+                "value": "3"
+              },
+              {
+                "label": "Administrator",
+                "value": "5"
+              }
+            ]
+          },
+          "key": "level",
+          "type": "select",
+          "input": true
+        },
+        {
+          "label": "Type",
+          "labelPosition": "left-left",
+          "widget": "choicesjs",
+          "tableView": true,
+          "defaultValue": "local",
+          "data": {
+            "values": [
+              {
+                "label": "Local",
+                "value": "local"
+              },
+              {
+                "label": "Oauth",
+                "value": "oauth"
+              }
+            ]
+          },
+          "key": "user_type",
+          "type": "select",
+          "input": true
+        },
+        {
+          "label": "Nieuw wachtwoord?",
+          "tableView": false,
+          "key": "new_password",
+          "type": "checkbox",
+          "input": true,
+          "defaultValue": false
+        },
+        {
+          "label": "Paswoord",
+          "labelPosition": "left-left",
+          "tableView": false,
+          "key": "password",
+          "conditional": {
+            "show": true,
+            "when": "new_password",
+            "eq": "true"
+          },
+          "type": "password",
+          "input": true,
+          "protected": true
+        },
+        {
+          "label": "Bevestig paswoord",
+          "labelPosition": "left-left",
+          "tableView": false,
+          "validate": {
+            "custom": "valid = (input === data.password) ? true : \"Paswoorden zijn niet gelijk\";"
+          },
+          "key": "confirm_password",
+          "conditional": {
+            "show": true,
+            "when": "new_password",
+            "eq": "true"
+          },
+          "type": "password",
+          "input": true,
+          "protected": true
+        }
+      ]
+    },
+    {
+      "label": "Columns",
+      "columns": [
+        {
+          "components": [
+            {
+              "label": "Opslaan",
+              "showValidations": false,
+              "theme": "success",
+              "disableOnInvalid": true,
+              "tableView": false,
+              "key": "submit",
+              "type": "button",
+              "saveOnEnter": false,
+              "input": true
+            }
+          ],
+          "width": 3,
+          "offset": 0,
+          "push": 0,
+          "pull": 0,
+          "size": "md",
+          "currentWidth": 3
+        },
+        {
+          "components": [
+            {
+              "label": "Annuleer",
+              "action": "event",
+              "showValidations": false,
+              "theme": "warning",
+              "tableView": false,
+              "key": "annuleer",
+              "type": "button",
+              "input": true,
+              "event": "cancel"
+            }
+          ],
+          "width": 3,
+          "offset": 0,
+          "push": 0,
+          "pull": 0,
+          "size": "md",
+          "currentWidth": 3
+        }
+      ],
+      "key": "columns",
+      "type": "columns",
+      "input": false,
+      "tableView": false
+    },
+    {
+      "label": "id",
+      "key": "id",
+      "type": "hidden",
+      "input": true,
+      "tableView": false
+    }
+  ]
+}

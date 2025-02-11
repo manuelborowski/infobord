@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{%  block styles %}
+    {{ super() }}
+    <link href="static/css/infobord.css" rel="stylesheet">
+
+{%  endblock %}
+
+{% block body %}
+    {{ super() }}
+    <h2>Vervangingen voor {{ global_data.school }}</h2>
+    <div id="info-table"></div>
+
+{% endblock %}
+
+{% block scripts %}
+   {{ super() }}
+    <script>
+    const global_data = {{ (global_data or {})|tojson }};
+    </script>
+    <script type="module" src="/static/js/project/infobord.js"></script>
+{% endblock %}

@@ -9,8 +9,8 @@ const __handle_fetch = async resp => {
     return data
 }
 
-export const fetch_post = async (endpoint, body) => {
-    const response = await fetch(Flask.url_for(endpoint), {method: 'POST', body: JSON.stringify(body),});
+export const fetch_post = async (endpoint, body, args={}) => {
+    const response = await fetch(Flask.url_for(endpoint, args), {method: 'POST', body: JSON.stringify(body),});
     return __handle_fetch(response);
 }
 

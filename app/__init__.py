@@ -11,118 +11,22 @@ from functools import wraps
 
 #Warning: update flask_jsglue.py: from markupsafe import Markup
 
-# DONE: filter: voeg locatie filter toe
-# DONE: paswoord veld met oogje
-# DONE: maximum tijdsuur per toestand
-# DONE: historiek: nieuwste bovenaan
-# DONE: incident-types toevoegen: "laptop vergeten", "nieuwe leerling, nog geen laptop"
-# DONE: link toevoegen naar m4s
-# TODO: GSM gebruiken voor ingeven nieuwe incident of updaten bestaande
-# TODO: laders ook een badge geven?
-# DONE: bericht opnieuw verzenden, eventueel naar co-accounts
-# DONE: bericht verzenden, voorzie mogelijkheid om tekst uit te breiden
-# TODO: retour laptops: nieuwe statussen ("wacht op laptop", "wacht op signpost", retour afgehandeld")
-# TODO: retour, onderscheid tussen laptops van de school (geen signpost) en signpost
-# TODO: hoes -> ook inbrengen in m4s
-# DONE: locaties -> signpost = hardware incident?
-# DONE: lader lenen
-# DONE: tijdelijk laptop lenen of nieuw in school en laptop lenen
-# TODO: tijdelijke laptop: in voorbereiding, uitgeleend, gesloten
+# 0.1 clone from laptop incident systeem 0.70
+# 0.2 able to add vervaningen
 
-# 0.1 first backup, user-view is ok
-# 0.2: messages have status [ok, warning, error].  Reworked user add/update/delete
-# 0.3: clean up.  Datatables to 2.1.8.  Replaced most document.ready in js to fix the order of invocation.  Updated cell_edit
-# 0.4: minor updates
-# 0.5: reworked column visibility
-# 0.6: columns visibility, in rowCallback(), cells refer to the columns that are visible, so a mapping from real to visible colums must be made.
-# 0.7: fixed issue with column-visibility and local-store of datatable settings.
-# 0.8: ellipsis and variable column width
-# 0.9: cleanup.  fixed cell- and row-backgroundcolor
-# 0.10: bugfixed cell_edit.  Introduced incident.
-# 0.11: moved filter and column menu into navbar
-# 0.12: added students-table and sync from SDH.  When client fetches, return inband message.  Added cron.  Formio-templates/defaults are fetched iso hard-inserted in HTML.
-# Updated incidents.  Placed filters and column-visibility into navbar.  Added buttons in navbar.
-# 0.13: added fetch to entra to get laptopinfo.  Incident, added code to get the laptops of a selected student.
-# 0.14: added tables for staff and spares.  Added popups to add a single spare or a list.
-# 0.15: added lis-badge.  Various large updates
-# 0.16: small bugfix in incident.  Updated CSS
-# 0.17: added history.  Added helper functions for forms.  Added datatable cell renderer for labels.  Incident form reused for incident update/state change.
-# Added event buttons/select to table.  Added template-post-processing to e.g. replace a value with a label.
-# 0.18: added history overview page.  Bugfix select2, make sure it is done initializing before changing its value.
-# 0.19: on incident overview page, added a context-menu and popup to display history
-# 0.20: reworked fetch-get to use the api filters/fields.  Put the endpoints in the correct files. Use try/except and logging as much as possible to propagate errors.
-# Data/defaults/configuration/... is fetched from the server when required.
-# 0.21: log in via smartschool
-# 0.22: send email when location changed.  Add arguments to incident.show url.
-# 0.23: pywin only on windows
-# 0.24: added smartschool-send-message
-# 0.25: updated smartschool.  Added incident-update form
-# 0.26: generate incidents for test purposes
-# 0.27: small bugfix
-# 0.28: incident-generate, avoid endless loop in case no default-location
-# 0.29: replaced, in table, select with button.  Select is now in update-form.  Unified labels/options/defaults.  State-change-buttons, moved from server to client
-# 0.30: added filter to hide closed incidents
-# 0.31: added cell coloring, based on value.
-# 0.32: datatables ellipsis, changed because it took too much processingtime
-# 0.33: added qr-code to scan de laptop label
-# 0.34 replace the action buttons (to change state) to generic buttons to update the incident and view the incident
-# 0.35: update incident, select location and/or new state, make sure that the selections are coherent.
-# 0.36: default password, inform user that password is being reset.  Added functionality to set password vi ADproxy
-# 0.37: added "condition" label to datatables column.  Added state "message" to explicitly send a message.
-# 0.38: from state repaired, it is possible to transit to state transition
-# 0.39: add button to close incident
-# 0.40: add button to filters to scan lis badge
-# 0.41: added m4s.  Updated various items
-# 0.42: multiple times a message can be sent.  It is possible to add an extra comment to the message.
-# 0.43: implement state-timout, if timeout detected, inform location responsibles.  SS message, sender is incident owner.
-# 0.44: reworked sending of ss-messages.  Use the quill RT editor.  Removed message state
-# 0.45: general bugfixes.  Extended buttonmenu.  Add button to set defaults. Added category and reworked states/locations/types
-# 0.46: message: before updating incident, remove HTML formatting.  Clear password field
-# 0.47: clean up of password-field-mess
-# 0.48: reworked laptop_type, i.e. students and staff are in 1 select, spare laptop is checkbox.
-# 0.49: added m4s api.  Use problemtypes defined by m4s.  General bugfixes
-# 0.50: category hw, added link to defect in m4s
-# 0.51: datatable, solved conflict between initialization and columns-visibility.  Bootbox, made confirm synchronous to avoid premature closing.
-#  Started with combining hardware and software category into repair
-# 0.52: added funcionality to switch from hardware to software incident type
-# 0.53: small updates and bugfixes
-# 0.54: improved new-incident-form ico spare laptop.  Reshuffled the layout of the forms a bit.  Added timeout for incident-types.
-# 0.55: bugfixed adding spare laptop badges and incident badges
-# 0.56: spare loan, added state "in preparation"
-# 0.57: esthetic updates.  Added installation of new laptop
-# 0.58: added incident-type filter
-# 0.59: small bugfix
-# 0.60: remove keys from client
-# 0.61: incident-type is hardware, make location change more generic
-# 0.62: first version of return-api
-# 0.63: implemented laptop return, use thefuzz to match a given name with a name in the database
-# 0.63-mobile-0.1: implement a seperate page for mobile login.  Create user specific urls to avoid logging in
-# 0.63-mobile-0.2: continue with mobile page, view and update repair incident.  Update incident-generate.
-# 0.63-mobile-0.3: small updates
-# 0.63-mobile-0.4: update repair form so that only one is required for new repairs and repairs to update
-# 0.63-mobile-0.5: incident.js, extracted functionality into a class.
-# 0.63-mobile-0.6: mobile and laptop view, shared code and form.  Small updates
-# 0.64: merge from 0.63-mobile-0.6
-# 0.65: regular users have less rights, cannot create or update incidents
-# 0.66: small bugfixes.  lis-badge-id cannot be reused until incident is closed
-# 0.67: minor layout updates
-# 0.68: minor layout updates.  Implemented QR code scanner (mobile).
-# 0.69: added minimalistic help
-# 0.70: small updates
-
-version = "0.70"
+version = "0.2"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
 #  enable logging
-top_log_handle = "LIS"
+top_log_handle = "IB"
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 # support custom filtering while logging
 class MyLogFilter(logging.Filter):
     def filter(self, record):
         record.username = current_user.username if current_user and current_user.is_active else 'NONE'
         return True
-LOG_FILENAME = os.path.join(sys.path[0], f'log/lis.txt')
+LOG_FILENAME = os.path.join(sys.path[0], f'log/ib.txt')
 log_level = getattr(logging, 'INFO')
 log.setLevel(log_level)
 log_handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=1024 * 1024, backupCount=20)
@@ -130,7 +34,7 @@ log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(me
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 
-log.info("START Laptop Incident Systeem")
+log.info("START Infobord")
 
 from app.config import app_config
 config_name = os.getenv('FLASK_CONFIG')
@@ -194,14 +98,8 @@ def supervisor_required(func):
 
 
 # Should be last to avoid circular import
-from app.presentation.view import auth, api, user, settings, incident, spare, lisbadge, history, student, staff
+from app.presentation.view import auth, user, settings, infobord
 app.register_blueprint(auth.bp_auth)
-app.register_blueprint(api.bp_api)
 app.register_blueprint(user.bp_user)
 app.register_blueprint(settings.bp_settings)
-app.register_blueprint(incident.bp_incident)
-app.register_blueprint(spare.bp_spare)
-app.register_blueprint(lisbadge.bp_lisbadge)
-app.register_blueprint(history.bp_history)
-app.register_blueprint(student.bp_student)
-app.register_blueprint(staff.bp_staff)
+app.register_blueprint(infobord.bp_infobord)

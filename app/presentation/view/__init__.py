@@ -1,4 +1,4 @@
-__all__ = ["api", "auth", "user", "incident"]
+__all__ = ["auth", "user", "settings"]
 
 import json, sys, pathlib
 from app import app, version, application as al, data as dl

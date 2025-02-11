@@ -3,7 +3,6 @@ from flask_login import login_required, current_user
 from app.data.datatables import DatatableConfig
 from app import data as dl, application as al
 from app.presentation.view import datatable_get_data, fetch_return_error
-from app.application.m4s import m4s
 import json, sys, pathlib, datetime
 
 # logging on file level

@@ -31,13 +31,15 @@ def add_single(model, data={}, commit=True, timestamp=False):
 
 def add_multiple(model, data=[], timestamp=False):
     try:
+        objs = []
         for d in data:
-            add_single(model, d, commit=False, timestamp=timestamp)
+            objs.append(add_single(model, d, commit=False, timestamp=timestamp))
         db.session.commit()
+        return objs
     except Exception as e:
         db.session.rollback()
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
+    return []
 
 
 def update_single(model, obj, data={}, commit=True, timestamp=False):

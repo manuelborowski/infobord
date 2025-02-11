@@ -24,7 +24,7 @@ def login():
                 if not user:
                     log.error('Could not save timestamp')
                 # Ok, continue
-                return redirect(url_for('incident.show'))
+                return redirect(url_for('infobord.edit', school="sum"))
             else:
                 log.error(f'{sys._getframe().f_code.co_name}: Invalid username/password')
                 message = {"status": "error", "data": "Ongeldig(e) gebruikersnaam/wachtwoord"}
@@ -84,7 +84,7 @@ def login_ss():
                     log.error('Could not save user')
                     return redirect(url_for('auth.login'))
                 # Ok, continue
-                return redirect(url_for('incident.show'))
+                return redirect(url_for('infobord.edit', school="sum"))
         else:
             redirect_uri = f'{app.config["SMARTSCHOOL_OUATH_REDIRECT_URI"]}/ss'
             return redirect(f'{app.config["SMARTSCHOOL_OAUTH_SERVER"]}?app_uri={redirect_uri}')
