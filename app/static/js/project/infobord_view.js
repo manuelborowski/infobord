@@ -15,19 +15,20 @@ const school2color = {
 
 const __draw_table = (data) => {
     const info_table = document.getElementById("info-table");
-    const span = document.createElement("span");
-    info_table.appendChild(span);
-    span.style.display = "flex";
-    const h1 = document.createElement("h1");
-    span.appendChild(h1)
-    const now = new Date()
-    h1.innerHTML = now.toLocaleDateString('nl-NL', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',});
-    const img = document.createElement("img");
-    span.appendChild(img);
-    img.src = `/static/img/${global_data.school}.png`
-    img.style.width = "75px";
-    img.style.height = "75px";
+    info_table.innerHTML = "";
 
+    // const span = document.createElement("span");
+    // info_table.appendChild(span);
+    // span.style.display = "flex";
+    // const h1 = document.createElement("h1");
+    // span.appendChild(h1)
+    // const now = new Date()
+    // h1.innerHTML = now.toLocaleDateString('nl-NL', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',});
+    // const img = document.createElement("img");
+    // span.appendChild(img);
+    // img.src = `/static/img/${global_data.school}.png`
+    // img.style.width = "75px";
+    // img.style.height = "75px";
 
     if (data.length === 0) {
         info_table.innerHTML = "Tabel is leeg";

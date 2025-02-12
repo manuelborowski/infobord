@@ -96,7 +96,10 @@ const __init_select_date = () => {
     }
     info_date.addEventListener("change", async e => {
         const resp = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
-        if (resp) __draw_table(resp.data);
+        if (resp) {
+            resp.data.sort((a, b) => a.lesuur - b.lesuur);
+            __draw_table(resp.data);
+        }
     });
     info_date.dispatchEvent(new Event("change")); // trigger first load
 }
@@ -205,5 +208,9 @@ $(document).ready(function () {
     else
         base_init({button_menu_items});
     __init_select_date();
+
+    document.getElementById("preview").addEventListener("click", () => {
+        window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&fontsize=x-large", "_blank");
+    });
 });
 

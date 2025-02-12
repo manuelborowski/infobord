@@ -16,8 +16,9 @@ from functools import wraps
 # 0.3: gebruikers can only view
 # 0.4: added viewer
 # 0.5: multiple days
+# 0.6: added preview button.  Small bugfixes.  Remove date and logo from view
 
-version = "0.5"
+version = "0.6"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

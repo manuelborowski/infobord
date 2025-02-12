@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from app import data as dl
-import json
+import json, datetime
 
 # logging on file level
 import logging
@@ -22,7 +22,8 @@ def edit():
 def view():
     school = request.args.get("school")
     font_size = request.args.get("fontsize")
-    infos = dl.infobord.get_m(("school", "=", school))
+    now = datetime.datetime.now().strftime("%Y-%m-%d")
+    infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", now)])
     infos = [i.to_dict() for i in infos]
     return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"], "font_size": font_size})
 

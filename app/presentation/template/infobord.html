@@ -7,7 +7,11 @@
 
 {% block body %}
     {{ super() }}
-    <div style="display:flex;"> <h2>Vervangingen voor {{ global_data.school }}</h2>&nbsp;&nbsp;<select id="info-date"></select></div>
+    <div style="display:flex;">
+        <h2>Vervangingen voor {{ global_data.school }}</h2>&nbsp;&nbsp;
+        <select id="info-date"></select>&nbsp;&nbsp;
+        <a type="button" id="preview" class="btn btn-success">Preview</a></div>
+    </div>
     <div id="info-table"></div>
 
 {% endblock %}
