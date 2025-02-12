@@ -7,7 +7,7 @@
 
 {% block body %}
     {{ super() }}
-    <h2>Vervangingen voor {{ global_data.school }}</h2>
+    <div style="display:flex;"> <h2>Vervangingen voor {{ global_data.school }}</h2>&nbsp;&nbsp;<select id="info-date"></select></div>
     <div id="info-table"></div>
 
 {% endblock %}

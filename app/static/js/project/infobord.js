@@ -1,7 +1,8 @@
 import {base_init} from "../base.js";
-import {fetch_delete, fetch_post} from "../common/common.js";
+import {fetch_delete, fetch_get, fetch_post} from "../common/common.js";
 
 const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
+const info_date = document.getElementById("info-date");
 
 const table_meta = [
     {value: action_buttons, label: "Actie", source: "value"},
@@ -81,11 +82,31 @@ const __draw_table = (data, nbr_rows = 20, add_to_table = false) => {
     info_table.querySelectorAll("input").forEach(e => e.addEventListener("input", () => document.getElementById("info-save").classList.add("blink-button")));
 }
 
+const __init_select_date = () => {
+    const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag"];
+
+    info_date.innerHTML = "";
+    let date = new Date();
+
+    for (let dag=0; dag < 7; dag++) {
+        let day_of_week = date.getDay();
+        if (day_of_week > 0 && day_of_week < 6)
+            info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date.toISOString().split("T")[0]})`, date.toISOString().split("T")[0], dag === 0, dag === 0));
+        date.setDate(date.getDate() + 1);
+    }
+    info_date.addEventListener("change", async e => {
+        const resp = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
+        if (resp) __draw_table(resp.data);
+    });
+    info_date.dispatchEvent(new Event("change")); // trigger first load
+}
+
 const __info_save = async () => {
     const rows = document.querySelectorAll('[data-id]');
+    const date = document.getElementById("info-date").value;
     let data = []
     for (const row of rows) {
-        let item = {school: global_data.school};
+        let item = {school: global_data.school, datum: `${date}`};
         const columns = row.querySelectorAll("[data-field]");
         for (const column of columns) {
             const field = column.dataset.field;
@@ -103,10 +124,9 @@ const __info_save = async () => {
         }
         if (item.lesuur > 0) data.push(item);
     }
-    const resp = await fetch_post("infobord.edit", data, {school: global_data.school});
+    const resp = await fetch_post("infobord.infobord", data, {school: global_data.school, datum: info_date.value});
     if (resp) __draw_table(resp.data);
     document.getElementById("info-save").classList.remove("blink-button");
-
 }
 
 const __info_delete = async () => {
@@ -115,7 +135,7 @@ const __info_delete = async () => {
         message: "U gaat alle lijnen wissen, zeker?",
         callback: async result => {
             if (result) {
-                const resp = await fetch_delete("infobord.edit", {school: global_data.school})
+                const resp = await fetch_delete("infobord.infobord", {school: global_data.school, datum: info_date.value})
                 if (resp) __draw_table([]);
             }
         }
@@ -184,6 +204,6 @@ $(document).ready(function () {
         base_init({});
     else
         base_init({button_menu_items});
-    __draw_table(global_data.info);
+    __init_select_date();
 });
 
