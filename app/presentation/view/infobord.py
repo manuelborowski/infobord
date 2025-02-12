@@ -33,17 +33,21 @@ def infobord():
     school = request.args.get("school")
     datum = request.args.get("datum")
     infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", datum)])
+    week_old_infos = []
+    if request.method in ["GET", "POST"]:
+        date = datetime.datetime.strptime(datum, "%Y-%m-%d") - datetime.timedelta(days=7)
+        week_old_infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", date.strftime("%Y-%m-%d"))])
+        week_old_infos = [i.to_dict() for i in week_old_infos]
     if request.method == "GET":
         infos = [i.to_dict() for i in infos]
-        return {"data": infos}
+        return {"data": infos, "vervangers": week_old_infos}
     if request.method == "POST":
         data = json.loads(request.data)
         # remove old entries
-        infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", datum)])
         dl.infobord.delete_m(objs=infos)
         data = dl.infobord.add_m(data)
         data = [d.to_dict() for d in data]
-        return {"data": data}
+        return {"data": data, "vervangers": week_old_infos}
     if request.method == "DELETE":
         dl.infobord.delete_m(objs=infos)
     return {}

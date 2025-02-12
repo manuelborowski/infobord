@@ -4,17 +4,34 @@ import {fetch_delete, fetch_get, fetch_post} from "../common/common.js";
 const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
 const info_date = document.getElementById("info-date");
 
-const table_meta = [
-    {value: action_buttons, label: "Actie", source: "value"},
-    {value: "lesuur", label: "Lesuur", source: "data", type: "int", size: 3},
-    {value: "leerkracht", label: "Te vervangen", source: "data", size: 20},
-    {value: "klas", label: "Klas", source: "data", size: 10},
-    {value: "info", label: "Taak/Toets", source: "data", size: 15},
-    {value: "locatie", label: "Lokaal", source: "data", size: 15},
-    {value: "vervanger", label: "Vervanger", source: "data", size: 20},
-]
-
-const __draw_table = (data, nbr_rows = 20, add_to_table = false) => {
+let vervangers = {};
+const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
+    const __lesuur_changed = e => {
+        const select = e.target.closest("tr").querySelector("[data-type=vervanger]");
+        if (e.target.value in vervangers) {
+            select.innerHTML = "";
+            select.add(new Option("", "", true, true));
+            vervangers[e.target.value].forEach(i => select.add(new Option(i, i)));
+            select.hidden = false;
+        } else {
+            select.hidden = true;
+        }
+    }
+    const __vervanger_changed = e => {
+        const value = e.target.value;
+        const vervanger_field = e.target.closest("tr").querySelector("[data-field=vervanger]");
+        vervanger_field.value = value;
+    }
+    const table_meta = [
+        {value: action_buttons, label: "Actie", source: "value"},
+        {value: "lesuur", label: "Lesuur", source: "data", type: "int", size: 3, cb: __lesuur_changed},
+        {value: "leerkracht", label: "Te vervangen", source: "data", size: 20},
+        {value: "klas", label: "Klas", source: "data", size: 10},
+        {value: "info", label: "Taak/Toets", source: "data", size: 15},
+        {value: "locatie", label: "Lokaal", source: "data", size: 15},
+        {value: "vervanger", label: "Vervanger", source: "data", size: 20},
+        {value: "vervanger", label: "Selecteer", source: "vervanger", size: 20, cb: __vervanger_changed},
+    ]
     const info_table = document.getElementById("info-table");
     let table = null;
     if (add_to_table) {
@@ -42,6 +59,12 @@ const __draw_table = (data, nbr_rows = 20, add_to_table = false) => {
                 const type = "type" in column ? column.type : "string";
                 if (column.source === "value") {
                     td.innerHTML = column.value;
+                } else if (column.source === "vervanger") {
+                    const select = document.createElement("select")
+                    td.appendChild(select);
+                    select.dataset.type = "vervanger"
+                    select.hidden = true;
+                    if ("cb" in column) select.addEventListener("change", column.cb);
                 } else {
                     const input = document.createElement("input");
                     td.appendChild(input);
@@ -49,9 +72,11 @@ const __draw_table = (data, nbr_rows = 20, add_to_table = false) => {
                     input.dataset.type = type;
                     input.value = item[column.value];
                     input.size = column.size;
+                    if ("cb" in column) input.addEventListener("input", column.cb);
                 }
             }
         }
+
     } else { // empty table
         for (let i = 0; i < nbr_rows; i++) {
             const tr = document.createElement("tr");
@@ -63,6 +88,12 @@ const __draw_table = (data, nbr_rows = 20, add_to_table = false) => {
                 const type = "type" in column ? column.type : "string";
                 if (column.source === "value") {
                     td.innerHTML = column.value;
+                } else if (column.source === "vervanger") {
+                    const select = document.createElement("select")
+                    td.appendChild(select);
+                    select.dataset.type = "vervanger"
+                    select.hidden = true;
+                    if ("cb" in column) select.addEventListener("change", column.cb);
                 } else {
                     const input = document.createElement("input");
                     td.appendChild(input);
@@ -70,11 +101,23 @@ const __draw_table = (data, nbr_rows = 20, add_to_table = false) => {
                     input.dataset.type = type;
                     input.value = "";
                     input.size = column.size;
+                    if ("cb" in column) input.addEventListener("input", column.cb);
                 }
             }
 
         }
     }
+    const rows = Array.from(table.querySelectorAll("tr"));
+    rows.shift();
+    for (const row of rows) {
+        for (const column of table_meta) {
+            if (column.source === "data" && "cb" in column) {
+                row.querySelector(`td [data-field=${column.value}]`).dispatchEvent(new Event("input"));
+
+            }
+        }
+    }
+
     info_table.querySelectorAll(".btn-item-delete").forEach(r => r.addEventListener("click", e => {
         const tr = e.target.closest("tr");
         tr.remove();
@@ -88,7 +131,7 @@ const __init_select_date = () => {
     info_date.innerHTML = "";
     let date = new Date();
 
-    for (let dag=0; dag < 7; dag++) {
+    for (let dag = 0; dag < 7; dag++) {
         let day_of_week = date.getDay();
         if (day_of_week > 0 && day_of_week < 6)
             info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date.toISOString().split("T")[0]})`, date.toISOString().split("T")[0], dag === 0, dag === 0));
@@ -98,6 +141,16 @@ const __init_select_date = () => {
         const resp = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
         if (resp) {
             resp.data.sort((a, b) => a.lesuur - b.lesuur);
+            // prepare list of vervangers
+            if ("vervangers" in resp && resp.vervangers.length > 0) {
+                for (const v of resp.vervangers) {
+                    if (v.lesuur in vervangers)
+                        vervangers[v.lesuur].push(v.vervanger);
+                    else
+                        vervangers[v.lesuur] = [v.vervanger];
+                }
+            }
+            for (const [l, v] of Object.entries(vervangers)) vervangers[l] = [...new Set(v.sort())]
             __draw_table(resp.data);
         }
     });
@@ -139,7 +192,7 @@ const __info_delete = async () => {
         callback: async result => {
             if (result) {
                 const resp = await fetch_delete("infobord.infobord", {school: global_data.school, datum: info_date.value})
-                if (resp) __draw_table([]);
+                    if (resp) __draw_table();
             }
         }
     });

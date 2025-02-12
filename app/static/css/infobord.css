@@ -1,6 +1,9 @@
 table td, table th {
     border-style: solid;
     border-width: 1px;
+}
+
+#view-table table td, .view-table table th {
     padding: 4px;
 }
 
@@ -21,7 +24,7 @@ table tr:last-child td {
     margin: auto;
 }
 
-#info-table table {
+#info-table table, #view-table table {
     border-spacing: 0;
 }
 

@@ -20,8 +20,9 @@ from functools import wraps
 # 0.7: added favicon
 # 0.8: view depends on lesuur (passed are not visible)
 # 0.9: small bugfix
+# 0.10: implemented vervangers
 
-version = "0.9"
+version = "0.10"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

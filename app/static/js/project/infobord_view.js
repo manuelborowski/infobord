@@ -14,8 +14,8 @@ const school2color = {
 }
 
 const __draw_table = (data) => {
-    const info_table = document.getElementById("info-table");
-    info_table.innerHTML = "";
+    const view_table = document.getElementById("view-table");
+    view_table.innerHTML = "";
 
     // const span = document.createElement("span");
     // info_table.appendChild(span);
@@ -31,12 +31,12 @@ const __draw_table = (data) => {
     // img.style.height = "75px";
 
     if (data.length === 0) {
-        info_table.innerHTML = "Tabel is leeg";
+        view_table.innerHTML = "Tabel is leeg";
         return
     }
     data.sort((a, b) => a.lesuur - b.lesuur);
     const table = document.createElement("table");
-    info_table.appendChild(table);
+    view_table.appendChild(table);
     const tr = document.createElement("tr");
     table.appendChild(tr);
     for (const column of table_meta) {
