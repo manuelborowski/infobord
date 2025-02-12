@@ -18,8 +18,9 @@ from functools import wraps
 # 0.5: multiple days
 # 0.6: added preview button.  Small bugfixes.  Remove date and logo from view
 # 0.7: added favicon
+# 0.8: view depends on lesuur (passed are not visible)
 
-version = "0.7"
+version = "0.8"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

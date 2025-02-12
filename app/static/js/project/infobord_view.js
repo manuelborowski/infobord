@@ -44,8 +44,21 @@ const __draw_table = (data) => {
         tr.appendChild(th);
         th.innerHTML = column.label;
     }
+    const now = new Date();
+    const now_reference = now.getHours() * 100 + now.getMinutes();
+
+    let view_minimum_lesuur = 9;
+    for (let i=9; i > 0; i--) {
+        let [h, m] = global_data.lestijden[i].split(".").map(i => parseInt(i));
+        if ((h * 100 + m) < now_reference) {
+            view_minimum_lesuur = i;
+            break;
+        }
+    }
+
     let lesuur = "";
     for (const item of data) {
+        if (item.lesuur < view_minimum_lesuur) continue;
         item.lesuur = `${item.lesuur}: ${global_data.lestijden[item.lesuur]}`
         if (item.lesuur !== lesuur)
             lesuur = item.lesuur;
