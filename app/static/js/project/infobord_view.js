@@ -47,7 +47,7 @@ const __draw_table = (data) => {
     const now = new Date();
     const now_reference = now.getHours() * 100 + now.getMinutes();
 
-    let view_minimum_lesuur = 9;
+    let view_minimum_lesuur = 1;
     for (let i=9; i > 0; i--) {
         let [h, m] = global_data.lestijden[i].split(".").map(i => parseInt(i));
         if ((h * 100 + m) < now_reference) {
