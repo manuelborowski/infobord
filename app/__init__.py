@@ -22,8 +22,9 @@ from functools import wraps
 # 0.9: small bugfix
 # 0.10: implemented vervangers
 # 0.11: small updates
+# 0.12: esthetic updates
 
-version = "0.11"
+version = "0.12"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

@@ -7,10 +7,12 @@ const table_meta = [
     {value: "vervanger", label: "Vervanger", source: "data", size: 20},
 ]
 
+const table = document.createElement("table");
+
 const school2color = {
-    sum: "#E3021D64",
-    sul: "#525D267C",
-    sui: "#034F9D91"
+    sum: "rgb(237 85 104 / 39%)",
+    sul: "rgb(216 227 170 / 49%)",
+    sui: "rgb(119 169 221 / 57%)"
 }
 
 const __draw_table = (data) => {
@@ -35,7 +37,6 @@ const __draw_table = (data) => {
         return
     }
     data.sort((a, b) => a.lesuur - b.lesuur);
-    const table = document.createElement("table");
     view_table.appendChild(table);
     const tr = document.createElement("tr");
     table.appendChild(tr);
@@ -74,10 +75,12 @@ const __draw_table = (data) => {
         }
     }
     table.style.background = school2color[global_data.school];
+    table.style.widows = "1200px";
 }
 
 $(document).ready(function () {
     if (global_data.font_size) document.querySelector("body").style.fontSize = global_data.font_size;
+    if (global_data.width) table.style.width = global_data.width;
     __draw_table(global_data.info);
 });
 

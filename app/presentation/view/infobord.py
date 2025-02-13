@@ -22,10 +22,12 @@ def edit():
 def view():
     school = request.args.get("school")
     font_size = request.args.get("fontsize")
+    width = request.args.get("width")
     now = datetime.datetime.now().strftime("%Y-%m-%d")
     infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", now)])
     infos = [i.to_dict() for i in infos]
-    return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"], "font_size": font_size})
+    return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"],
+                                                              "font_size": font_size, "width": width})
 
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE"])
 @login_required

@@ -1,3 +1,7 @@
+body {
+    font-family: sans-serif;
+}
+
 table td, table th {
     border-style: solid;
     border-width: 1px;
