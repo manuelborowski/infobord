@@ -125,3 +125,6 @@ footer {
     margin-right: 3px;
 }
 
+.text-muted {
+    color: #98a6b3 !important;
+}
