@@ -43,14 +43,21 @@ class ExtraInfo {
         ExtraInfo.location_options.forEach(o => this.__location.add(new Option(o.label, o.value)))
     }
 
-    get content() {
+    content_get() {
         return this.quill.root.innerHTML;
     }
 
-    get location() {
+    async content_set(msg) {
+         await this.quill.clipboard.dangerouslyPasteHTML(msg);
+    }
+
+    location_get() {
         return this.__location.value
     }
 
+    location_set(location) {
+        this.__location.value = location;
+    }
 }
 
 const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
@@ -160,21 +167,22 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
 
         }
     }
+    // trigger the callbacks on columns/rows
     const rows = Array.from(table.querySelectorAll("tr"));
     rows.shift();
     for (const row of rows) {
         for (const column of table_meta) {
             if (column.source === "data" && "cb" in column) {
                 row.querySelector(`td [data-field=${column.value}]`).dispatchEvent(new Event("input"));
-
             }
         }
     }
-
+    // attach an eventhandler on the "remove" button in each row
     info_table.querySelectorAll(".btn-item-delete").forEach(r => r.addEventListener("click", e => {
         const tr = e.target.closest("tr");
         tr.remove();
     }));
+    // attach an eventhandler on each input of the table so that, when at least on input is changed, the save button begins to blink
     info_table.querySelectorAll("input").forEach(e => e.addEventListener("input", () => document.getElementById("info-save").classList.add("blink-button")));
 }
 
@@ -191,12 +199,12 @@ const __init_select_date = () => {
         date.setDate(date.getDate() + 1);
     }
     info_date.addEventListener("change", async e => {
-        const resp = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
-        if (resp) {
-            resp.data.sort((a, b) => a.lesuur - b.lesuur);
+        const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
+        if (resp_info) {
+            resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
             // prepare list of vervangers
-            if ("vervangers" in resp && resp.vervangers.length > 0) {
-                for (const v of resp.vervangers) {
+            if ("vervangers" in resp_info && resp_info.vervangers.length > 0) {
+                for (const v of resp_info.vervangers) {
                     if (v.lesuur in vervangers)
                         vervangers[v.lesuur].push(v.vervanger);
                     else
@@ -204,7 +212,12 @@ const __init_select_date = () => {
                 }
             }
             for (const [l, v] of Object.entries(vervangers)) vervangers[l] = [...new Set(v.sort())]
-            __draw_table(resp.data);
+            __draw_table(resp_info.data);
+        }
+        const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
+        if (resp_extra) {
+            extra_info.content_set(resp_extra.data.info);
+            extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
         }
     });
     info_date.dispatchEvent(new Event("change")); // trigger first load
@@ -234,8 +247,8 @@ const __info_save = async () => {
         if (item.lesuur > 0) data.push(item);
     }
     await fetch_post("infobord.infobord", data, {school: global_data.school, datum: info_date.value});
-    const [location, lesuur] = extra_info.location.split("-");
-    data = {lesuur: parseInt(lesuur), location, info: extra_info.content, school: global_data.school};
+    const [location, lesuur] = extra_info.location_get().split("-");
+    data = {lesuur: parseInt(lesuur), location, info: extra_info.content_get(), school: global_data.school};
     await fetch_post("infobord.extrainfo", data, {school: global_data.school});
     document.getElementById("info-save").classList.remove("blink-button");
 }

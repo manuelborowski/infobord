@@ -28,7 +28,7 @@ def view():
     infos = [i.to_dict() for i in infos]
     extra_info = dl.extra_info.get([("school", "=", school)])
     return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"],
-                                                              "font_size": font_size, "width": width, "extra_info": extra_info})
+                                                              "font_size": font_size, "width": width, "extra_info": extra_info.to_dict()})
 
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE"])
 @login_required
@@ -60,7 +60,7 @@ def extrainfo():
     school = request.args.get("school")
     extra_info = dl.extra_info.get([("school", "=", school)])
     if request.method in ["GET"]:
-        return {"data": extra_info}
+        return {"data": extra_info.to_dict()}
     if request.method == "POST":
         data = json.loads(request.data)
         if extra_info:
