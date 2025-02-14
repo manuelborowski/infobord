@@ -23,9 +23,12 @@ from functools import wraps
 # 0.10: implemented vervangers
 # 0.11: small updates
 # 0.12: esthetic updates
+# 0.13: added more dates to select from
+# 0.14: updated preview so that future rosters can be displayed
 # 0.12-extra-info-0.1: backup
+# 0.12-extra-info-0.3: merge main
 
-version = "0.12-extra-info-0.2"
+version = "0.12-extra-info-0.3"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

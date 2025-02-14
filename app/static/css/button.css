@@ -2,6 +2,7 @@
     display: flex;
     justify-content: flex-start;
     width: 95%;
+    height: 40px;
 }
 
 .button-menu-placeholder > button {
@@ -9,11 +10,8 @@
     background-color: #2aa846;
     border-color: #2aa846;
     margin: 0;
-    padding-left: 2px;
-    padding-right: 2px;
-    padding-top: 0;
-    padding-bottom: 0;
     margin-right: 5px;
+    padding: 10px;
 }
 .button-menu-placeholder > * {
     line-height: normal;

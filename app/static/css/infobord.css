@@ -47,7 +47,7 @@ input {
 
 .blink-button {
     color: white;
-    animation: blink 3s linear infinite;
+    animation: blink 1s linear infinite;
 }
 
 .ql-toolbar {
