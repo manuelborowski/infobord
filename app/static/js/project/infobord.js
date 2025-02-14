@@ -1,6 +1,16 @@
 import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post} from "../common/common.js";
 
+const table_meta = [
+    {value: "lesuur", label: "Lesuur", source: "data", type: "int", size: 3},
+    {value: "leerkracht", label: "Te vervangen", source: "data", size: 20},
+    {value: "klas", label: "Klas", source: "data", size: 10},
+    {value: "info", label: "Taak/Toets", source: "data", size: 15},
+    {value: "locatie", label: "Lokaal", source: "data", size: 15},
+    {value: "vervanger", label: "Vervanger", source: "data", size: 20},
+]
+
+
 class ExtraInfo {
     static quill_toolbar_options = [
         ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
@@ -40,7 +50,7 @@ class ExtraInfo {
         this.quill = new Quill(document.getElementById("extra-info"), {modules: {toolbar: ExtraInfo.quill_toolbar_options}, theme: 'snow', placeholder: "Typ hier je boodschap"});
         this.__location = document.getElementById("extra-info-location");
         this.__location.innerHTML = "";
-        ExtraInfo.location_options.forEach(o => this.__location.add(new Option(o.label, o.value)))
+        ExtraInfo.location_options.forEach(o => this.__location.add(new Option(o.label, o.value)));
     }
 
     content_get() {
@@ -48,7 +58,8 @@ class ExtraInfo {
     }
 
     async content_set(msg) {
-         await this.quill.clipboard.dangerouslyPasteHTML(msg);
+        await this.quill.clipboard.dangerouslyPasteHTML(msg);
+        this.quill.on("text-change", () => document.getElementById("info-save").classList.add("blink-button"));
     }
 
     location_get() {
@@ -57,6 +68,7 @@ class ExtraInfo {
 
     location_set(location) {
         this.__location.value = location;
+        this.__location.addEventListener("input", () => document.getElementById("info-save").classList.add("blink-button"));
     }
 }
 
@@ -221,7 +233,7 @@ const __init_select_date = () => {
             __draw_table(resp_info.data);
         }
         const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
-        if (resp_extra) {
+        if (resp_extra.data) {
             extra_info.content_set(resp_extra.data.info);
             extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
         }
@@ -238,8 +250,7 @@ const __info_save = async () => {
         const columns = row.querySelectorAll("[data-field]");
         for (const column of columns) {
             const field = column.dataset.field;
-            if (column.dataset.type === "int") {
-                column.value = column.value === "" ? 0 : column.value;
+            if (column.dataset.type === "int" && column.value !== "") {
                 const value = parseInt(column.value);
                 if (isNaN(value)) {
                     const column_meta = table_meta.filter(i => i.value === column.dataset.field)[0];

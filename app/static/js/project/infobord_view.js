@@ -17,8 +17,9 @@ const school2color = {
 
 const __draw_table = () => {
 
-    const __inject_extra_info = (lesuur) => {
-        if (global_data.extra_info && global_data.extra_info.lesuur < lesuur) {
+    let __info_injected = false;
+    const __inject_extra_info = () => {
+        if (global_data.extra_info && global_data.extra_info.location === "lesuur") {
             const tr = document.createElement("tr");
             table.appendChild(tr);
             const td = document.createElement("td");
@@ -26,6 +27,9 @@ const __draw_table = () => {
             td.colSpan = 6;
             td.style.textAlign = "center";
             td.innerHTML = global_data.extra_info.info;
+            __info_injected = true;
+        } else if (global_data.extra_info && global_data.extra_info.location === "left") {
+            document.getElementById("view-extra-info").innerHTML = global_data.extra_info.info;
         }
     }
 
@@ -60,10 +64,9 @@ const __draw_table = () => {
             }
         }
     }
-
     let lesuur = "";
     for (const item of global_data.info) {
-        __inject_extra_info(item.lesuur);
+        if (global_data.extra_info && global_data.extra_info.location === "lesuur" && global_data.extra_info.lesuur <= item.lesuur && !__info_injected) __inject_extra_info()
         if (item.lesuur < view_minimum_lesuur) continue;
         item.lesuur = `${item.lesuur}: ${global_data.lestijden[item.lesuur]}`
         if (item.lesuur !== lesuur)
@@ -81,11 +84,12 @@ const __draw_table = () => {
     }
     table.style.background = school2color[global_data.school];
     table.style.widows = "1200px";
+    if (global_data.extra_info && global_data.extra_info.location === "left") __inject_extra_info();
 }
 
 $(document).ready(function () {
     if (global_data.font_size) document.querySelector("body").style.fontSize = global_data.font_size;
     if (global_data.width) table.style.width = global_data.width;
-    __draw_table(global_data.info);
+    __draw_table();
 });
 

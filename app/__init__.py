@@ -27,8 +27,9 @@ from functools import wraps
 # 0.14: updated preview so that future rosters can be displayed
 # 0.12-extra-info-0.1: backup
 # 0.12-extra-info-0.3: merge main
+# 0.12-extra-info-0.4: added extra info.  Bugfix in models.py
 
-version = "0.12-extra-info-0.3"
+version = "0.12-extra-info-0.4"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

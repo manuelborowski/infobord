@@ -62,7 +62,7 @@ def extrainfo():
     school = request.args.get("school")
     extra_info = dl.extra_info.get([("school", "=", school)])
     if request.method in ["GET"]:
-        return {"data": extra_info.to_dict()}
+        return {"data": extra_info.to_dict() if extra_info else None}
     if request.method == "POST":
         data = json.loads(request.data)
         if extra_info:
@@ -70,4 +70,10 @@ def extrainfo():
         else:
             dl.extra_info.add(data)
     return {}
+
+@bp_infobord.route('/extrainfoview', methods=['GET'])
+def extrainfoview():
+    school = request.args.get("school")
+    extra_info = dl.extra_info.get([("school", "=", school)])
+    return render_template("infobord_view_extra.html", extra_info=extra_info.to_dict())
 

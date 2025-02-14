@@ -7,14 +7,17 @@
 
 <body>
 <h1 id="view-date"></h1>
-<div id="view-table"></div>
+<div style="display: flex">
+    <div id="view-extra-info" style="border-style: solid"></div>
+    <div id="view-table"></div>
+</div>
 
-    {{ JSGlue.include() }}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-   <script>
+{{ JSGlue.include() }}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
     const global_data = {{ (global_data or {})|tojson }};
-    </script>
-    <script type="module" src="/static/js/project/infobord_view.js"></script>
+</script>
+<script type="module" src="/static/js/project/infobord_view.js"></script>
 
 </body>
 </html>

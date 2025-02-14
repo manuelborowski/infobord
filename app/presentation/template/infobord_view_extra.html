@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="static/css/infobord.css" rel="stylesheet">
+</head>
+
+<body>
+<div id="view-extra-info" style="width: max-content;border-style: solid;padding: 10px;"></div>
+</div>
+
+<script>
+    const extra_info = {{ (extra_info or "")|tojson }};
+    document.getElementById("view-extra-info").innerHTML = extra_info.info;
+</script>
+</body>
+</html>
