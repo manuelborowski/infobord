@@ -1,9 +1,10 @@
 {% extends "base.html" %}
-{%  block styles %}
+{% block styles %}
     {{ super() }}
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"/>
     <link href="static/css/infobord.css" rel="stylesheet">
 
-{%  endblock %}
+{% endblock %}
 
 {% block body %}
     {{ super() }}
@@ -13,13 +14,20 @@
         <a type="button" id="preview" class="btn btn-success">Preview</a></div>
     </div>
     <div id="info-table"></div>
+    <hr>
+    <div style="margin:20px">
+        <b>Extra informatie</b><br>
+        <label>Waar tonen?&nbsp;<select id="extra-info-location"></select></label>
+        <div id="extra-info"></div>
+    </div>
 
 {% endblock %}
 
 {% block scripts %}
-   {{ super() }}
+    {{ super() }}
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script>
-    const global_data = {{ (global_data or {})|tojson }};
+        const global_data = {{ (global_data or {})|tojson }};
     </script>
     <script type="module" src="/static/js/project/infobord.js"></script>
 {% endblock %}

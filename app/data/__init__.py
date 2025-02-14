@@ -1,10 +1,11 @@
-__all__ = ["user", "models", "settings", "datatables", "infobord"]
+__all__ = ["user", "models", "settings", "datatables", "infobord", "extra_info"]
 
 import app.data.user
 import app.data.models
 import app.data.settings
 import app.data.datatables
 import app.data.infobord
+import app.data.extra_info
 
 from app import login_manager
 @login_manager.user_loader

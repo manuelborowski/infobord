@@ -1,8 +1,61 @@
 import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post} from "../common/common.js";
 
+class ExtraInfo {
+    static quill_toolbar_options = [
+        ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+        ['blockquote', 'code-block'],
+        ['link', 'image', 'video', 'formula'],
+
+        [{'header': 1}, {'header': 2}],               // custom button values
+        [{'list': 'ordered'}, {'list': 'bullet'}, {'list': 'check'}],
+        [{'script': 'sub'}, {'script': 'super'}],      // superscript/subscript
+        [{'indent': '-1'}, {'indent': '+1'}],          // outdent/indent
+        [{'direction': 'rtl'}],                         // text direction
+
+        [{'size': ['small', false, 'large', 'huge']}],  // custom dropdown
+        [{'header': [1, 2, 3, 4, 5, 6, false]}],
+
+        [{'color': []}, {'background': []}],          // dropdown with defaults from theme
+        [{'font': []}],
+        [{'align': []}],
+
+        ['clean']                                         // remove formatting button
+    ];
+    static location_options = [
+        {value: "none-0", label: "Niet"},
+        {value: "left-0", label: "Links"},
+        {value: "lesuur-1", label: "In lesuur 1"},
+        {value: "lesuur-2", label: "In lesuur 2"},
+        {value: "lesuur-3", label: "In lesuur 3"},
+        {value: "lesuur-4", label: "In lesuur 4"},
+        {value: "lesuur-5", label: "In lesuur 5"},
+        {value: "lesuur-6", label: "In lesuur 6"},
+        {value: "lesuur-7", label: "In lesuur 7"},
+        {value: "lesuur-8", label: "In lesuur 8"},
+        {value: "lesuur-9", label: "In lesuur 9"},
+    ]
+
+    constructor() {
+        this.quill = new Quill(document.getElementById("extra-info"), {modules: {toolbar: ExtraInfo.quill_toolbar_options}, theme: 'snow', placeholder: "Typ hier je boodschap"});
+        this.__location = document.getElementById("extra-info-location");
+        this.__location.innerHTML = "";
+        ExtraInfo.location_options.forEach(o => this.__location.add(new Option(o.label, o.value)))
+    }
+
+    get content() {
+        return this.quill.root.innerHTML;
+    }
+
+    get location() {
+        return this.__location.value
+    }
+
+}
+
 const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
 const info_date = document.getElementById("info-date");
+const extra_info = new ExtraInfo();
 
 let vervangers = {};
 const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
@@ -180,8 +233,10 @@ const __info_save = async () => {
         }
         if (item.lesuur > 0) data.push(item);
     }
-    const resp = await fetch_post("infobord.infobord", data, {school: global_data.school, datum: info_date.value});
-    if (resp) __draw_table(resp.data);
+    await fetch_post("infobord.infobord", data, {school: global_data.school, datum: info_date.value});
+    const [location, lesuur] = extra_info.location.split("-");
+    data = {lesuur: parseInt(lesuur), location, info: extra_info.content, school: global_data.school};
+    await fetch_post("infobord.extrainfo", data, {school: global_data.school});
     document.getElementById("info-save").classList.remove("blink-button");
 }
 
@@ -192,7 +247,7 @@ const __info_delete = async () => {
         callback: async result => {
             if (result) {
                 const resp = await fetch_delete("infobord.infobord", {school: global_data.school, datum: info_date.value})
-                    if (resp) __draw_table();
+                if (resp) __draw_table();
             }
         }
     });
@@ -255,7 +310,8 @@ const button_menu_items = [
     },
 ]
 
-$(document).ready(function () {
+
+$(document).ready(async function () {
     if (current_user.level < 3)
         base_init({});
     else

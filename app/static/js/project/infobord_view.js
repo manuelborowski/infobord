@@ -15,28 +15,27 @@ const school2color = {
     sui: "rgb(119 169 221 / 57%)"
 }
 
-const __draw_table = (data) => {
+const __draw_table = () => {
+
+    const __inject_extra_info = (lesuur) => {
+        if (global_data.extra_info && global_data.extra_info.lesuur < lesuur) {
+            const tr = document.createElement("tr");
+            table.appendChild(tr);
+            const td = document.createElement("td");
+            tr.appendChild(td);
+            td.colSpan = 6;
+            td.style.textAlign = "center";
+            td.innerHTML = global_data.extra_info.info;
+        }
+    }
+
     const view_table = document.getElementById("view-table");
     view_table.innerHTML = "";
-
-    // const span = document.createElement("span");
-    // info_table.appendChild(span);
-    // span.style.display = "flex";
-    // const h1 = document.createElement("h1");
-    // span.appendChild(h1)
-    // const now = new Date()
-    // h1.innerHTML = now.toLocaleDateString('nl-NL', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',});
-    // const img = document.createElement("img");
-    // span.appendChild(img);
-    // img.src = `/static/img/${global_data.school}.png`
-    // img.style.width = "75px";
-    // img.style.height = "75px";
-
-    if (data.length === 0) {
+    if (global_data.info.length === 0) {
         view_table.innerHTML = "Tabel is leeg";
         return
     }
-    data.sort((a, b) => a.lesuur - b.lesuur);
+    global_data.info.sort((a, b) => a.lesuur - b.lesuur);
     view_table.appendChild(table);
     const tr = document.createElement("tr");
     table.appendChild(tr);
@@ -58,7 +57,8 @@ const __draw_table = (data) => {
     }
 
     let lesuur = "";
-    for (const item of data) {
+    for (const item of global_data.info) {
+        __inject_extra_info(item.lesuur);
         if (item.lesuur < view_minimum_lesuur) continue;
         item.lesuur = `${item.lesuur}: ${global_data.lestijden[item.lesuur]}`
         if (item.lesuur !== lesuur)

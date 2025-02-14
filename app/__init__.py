@@ -23,8 +23,9 @@ from functools import wraps
 # 0.10: implemented vervangers
 # 0.11: small updates
 # 0.12: esthetic updates
+# 0.12-extra-info-0.1: backup
 
-version = "0.12"
+version = "0.12-extra-info-0.1"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

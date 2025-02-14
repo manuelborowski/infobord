@@ -26,8 +26,9 @@ def view():
     now = datetime.datetime.now().strftime("%Y-%m-%d")
     infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", now)])
     infos = [i.to_dict() for i in infos]
+    extra_info = dl.extra_info.get([("school", "=", school)])
     return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"],
-                                                              "font_size": font_size, "width": width})
+                                                              "font_size": font_size, "width": width, "extra_info": extra_info})
 
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE"])
 @login_required
@@ -35,22 +36,36 @@ def infobord():
     school = request.args.get("school")
     datum = request.args.get("datum")
     infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", datum)])
-    week_old_infos = []
-    if request.method in ["GET", "POST"]:
-        date = datetime.datetime.strptime(datum, "%Y-%m-%d") - datetime.timedelta(days=7)
-        week_old_infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", date.strftime("%Y-%m-%d"))])
+    if request.method in ["GET"]:
+        week_old_infos = []
+        for i in range(1, 4):
+            date = datetime.datetime.strptime(datum, "%Y-%m-%d") - datetime.timedelta(days= 7 * i)
+            week_old_infos += dl.infobord.get_m([("school", "=", school), ("datum", "=", date.strftime("%Y-%m-%d"))])
         week_old_infos = [i.to_dict() for i in week_old_infos]
-    if request.method == "GET":
         infos = [i.to_dict() for i in infos]
         return {"data": infos, "vervangers": week_old_infos}
     if request.method == "POST":
         data = json.loads(request.data)
         # remove old entries
         dl.infobord.delete_m(objs=infos)
-        data = dl.infobord.add_m(data)
-        data = [d.to_dict() for d in data]
-        return {"data": data, "vervangers": week_old_infos}
+        dl.infobord.add_m(data)
     if request.method == "DELETE":
         dl.infobord.delete_m(objs=infos)
+    return {}
+
+
+@bp_infobord.route('/extrainfo', methods=['GET', "POST"])
+@login_required
+def extrainfo():
+    school = request.args.get("school")
+    extra_info = dl.extra_info.get([("school", "=", school)])
+    if request.method in ["GET"]:
+        return {"data": extra_info}
+    if request.method == "POST":
+        data = json.loads(request.data)
+        if extra_info:
+            dl.extra_info.update(extra_info, data)
+        else:
+            dl.extra_info.add(data)
     return {}
 

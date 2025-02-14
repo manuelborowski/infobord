@@ -46,8 +46,16 @@ input {
 }
 
 .blink-button {
-    /*background-color: #8EDDBE;*/
     color: white;
     animation: blink 3s linear infinite;
 }
 
+.ql-toolbar {
+    width: 50%;
+}
+
+.ql-container {
+    height: 200px;
+    background: #a1e8a175;
+    width: 50%;
+}
