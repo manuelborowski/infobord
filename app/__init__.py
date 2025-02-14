@@ -24,8 +24,9 @@ from functools import wraps
 # 0.11: small updates
 # 0.12: esthetic updates
 # 0.13: added more dates to select from
+# 0.14: updated preview so that future rosters can be displayed
 
-version = "0.13"
+version = "0.14"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

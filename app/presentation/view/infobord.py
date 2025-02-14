@@ -21,13 +21,15 @@ def edit():
 @bp_infobord.route('/infobordview', methods=['GET'])
 def view():
     school = request.args.get("school")
+    datum = request.args.get("datum")
     font_size = request.args.get("fontsize")
     width = request.args.get("width")
-    now = datetime.datetime.now().strftime("%Y-%m-%d")
-    infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", now)])
+    preview = request.args.get("preview") == "true"
+    view_date = datum if datum else datetime.datetime.now().strftime("%Y-%m-%d")
+    infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", view_date)])
     infos = [i.to_dict() for i in infos]
     return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"],
-                                                              "font_size": font_size, "width": width})
+                                                              "font_size": font_size, "width": width, "preview": preview, "date": view_date})
 
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE"])
 @login_required

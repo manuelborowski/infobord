@@ -17,6 +17,7 @@ const school2color = {
 
 const __draw_table = (data) => {
     const view_table = document.getElementById("view-table");
+    const view_date = document.getElementById("view-date");
     view_table.innerHTML = "";
 
     // const span = document.createElement("span");
@@ -49,11 +50,15 @@ const __draw_table = (data) => {
     const now_reference = now.getHours() * 100 + now.getMinutes();
 
     let view_minimum_lesuur = 1;
-    for (let i=9; i > 0; i--) {
-        let [h, m] = global_data.lestijden[i].split(".").map(i => parseInt(i));
-        if ((h * 100 + m) < now_reference) {
-            view_minimum_lesuur = i;
-            break;
+    if (global_data.preview) {
+        view_date.innerHTML = global_data.date;
+    } else {
+        for (let i = 9; i > 0; i--) {
+            let [h, m] = global_data.lestijden[i].split(".").map(i => parseInt(i));
+            if ((h * 100 + m) < now_reference) {
+                view_minimum_lesuur = i;
+                break;
+            }
         }
     }
 

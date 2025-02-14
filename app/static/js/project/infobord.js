@@ -269,7 +269,7 @@ $(document).ready(function () {
     __init_select_date();
 
     document.getElementById("preview").addEventListener("click", () => {
-        window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&fontsize=x-large", "_blank");
+        window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date.value + "&fontsize=x-large&preview=true", "_blank");
     });
 });
 
