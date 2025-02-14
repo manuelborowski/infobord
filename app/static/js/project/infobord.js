@@ -126,15 +126,21 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
 }
 
 const __init_select_date = () => {
-    const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag"];
+    const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
 
     info_date.innerHTML = "";
     let date = new Date();
 
-    for (let dag = 0; dag < 7; dag++) {
-        let day_of_week = date.getDay();
-        if (day_of_week > 0 && day_of_week < 6)
+    for (let dag = 0; dag < 21; dag++) {
+        let day_of_week = date.getDay() % 7;
+        if (dagen[day_of_week] !== "") {
             info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date.toISOString().split("T")[0]})`, date.toISOString().split("T")[0], dag === 0, dag === 0));
+            if (day_of_week === 5) {
+                const option = new Option("-------------------------", null);
+                option.disabled = true;
+                info_date.add(option);
+            }
+        }
         date.setDate(date.getDate() + 1);
     }
     info_date.addEventListener("change", async e => {

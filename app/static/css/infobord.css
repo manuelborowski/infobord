@@ -48,6 +48,6 @@ input {
 .blink-button {
     /*background-color: #8EDDBE;*/
     color: white;
-    animation: blink 3s linear infinite;
+    animation: blink 1s linear infinite;
 }
 
