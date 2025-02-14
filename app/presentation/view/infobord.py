@@ -30,7 +30,7 @@ def view():
     infos = [i.to_dict() for i in infos]
     extra_info = dl.extra_info.get([("school", "=", school)])
     return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"],
-                                                              "font_size": font_size, "width": width, "preview": preview, "date": view_date, "extra_info": extra_info.to_dict()})
+                                                              "font_size": font_size, "width": width, "preview": preview, "date": view_date, "extra_info": extra_info.to_dict() if extra_info else None})
 
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE"])
 @login_required
@@ -75,5 +75,5 @@ def extrainfo():
 def extrainfoview():
     school = request.args.get("school")
     extra_info = dl.extra_info.get([("school", "=", school)])
-    return render_template("infobord_view_extra.html", extra_info=extra_info.to_dict())
+    return render_template("infobord_view_extra.html", extra_info=extra_info.to_dict() if extra_info else None)
 

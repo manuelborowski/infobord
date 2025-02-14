@@ -29,8 +29,9 @@ from functools import wraps
 # 0.12-extra-info-0.3: merge main
 # 0.12-extra-info-0.4: added extra info.  Bugfix in models.py
 # 0.15: merge from 0.12-extra-info-0.4
+# 0.16: small bugfix
 
-version = "0.15"
+version = "0.16"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
