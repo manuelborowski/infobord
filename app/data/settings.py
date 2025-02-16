@@ -90,6 +90,10 @@ default_configuration_settings = {
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'user-datatables-template': ({}, Settings.SETTING_TYPE.E_YAML),
+
+    'school-configuration': ({}, Settings.SETTING_TYPE.E_YAML),
+    'field-configuration': ({}, Settings.SETTING_TYPE.E_YAML),
+
 }
 
 

@@ -1,22 +1,12 @@
-const table_meta = [
-    {value: "lesuur", label: "Lesuur", source: "data", type: "int", size: 3},
-    {value: "leerkracht", label: "Te vervangen", source: "data", size: 20},
-    {value: "klas", label: "Klas", source: "data", size: 10},
-    {value: "info", label: "Taak/Toets", source: "data", size: 15},
-    {value: "locatie", label: "Lokaal", source: "data", size: 15},
-    {value: "vervanger", label: "Vervanger", source: "data", size: 20},
-]
-
 const table = document.createElement("table");
 
 const school2color = {
-    sum: "rgb(237 85 104 / 39%)",
+    sum: "white",
     sul: "rgb(216 227 170 / 49%)",
     sui: "rgb(119 169 221 / 57%)"
 }
 
 const __draw_table = () => {
-
     let __info_injected = false;
     const __inject_extra_info = () => {
         if (global_data.extra_info && global_data.extra_info.location === "lesuur") {
@@ -24,12 +14,13 @@ const __draw_table = () => {
             table.appendChild(tr);
             const td = document.createElement("td");
             tr.appendChild(td);
-            td.colSpan = 6;
+            td.colSpan = table.rows[0].cells.length; // number of cells in header
             td.style.textAlign = "center";
             td.innerHTML = global_data.extra_info.info;
             __info_injected = true;
         } else if (global_data.extra_info && global_data.extra_info.location === "left") {
             document.getElementById("view-extra-info").innerHTML = global_data.extra_info.info;
+            document.getElementById("view-extra-info").hidden = false;
         }
     }
 
@@ -44,14 +35,17 @@ const __draw_table = () => {
     view_table.appendChild(table);
     const tr = document.createElement("tr");
     table.appendChild(tr);
-    for (const column of table_meta) {
-        const th = document.createElement("th");
-        tr.appendChild(th);
-        th.innerHTML = column.label;
+    for (const field of global_data.school_info.fields) {
+        const column = global_data.field_info[field];
+        if (column.source === "data") {
+            const th = document.createElement("th");
+            tr.appendChild(th);
+            th.innerHTML = column.label;
+        }
     }
+    // normally, past lesuren are not displayed anymore
     const now = new Date();
     const now_reference = now.getHours() * 100 + now.getMinutes();
-
     let view_minimum_lesuur = 1;
     if (global_data.preview) {
         view_date.innerHTML = global_data.date;
@@ -75,11 +69,14 @@ const __draw_table = () => {
             item.lesuur = "";
         const tr = document.createElement("tr");
         table.appendChild(tr);
-        for (const column of table_meta) {
-            const td = document.createElement("td");
-            tr.appendChild(td);
-            td.innerHTML = item[column.value];
-            if (item.lesuur === "") td.style.borderTopStyle = "none";
+        for (const field of global_data.school_info.fields) {
+            const column = global_data.field_info[field];
+            if (column.source === "data") {
+                const td = document.createElement("td");
+                tr.appendChild(td);
+                td.innerHTML = item[field];
+                if (item.lesuur === "") td.style.borderTopStyle = "none";
+            }
         }
     }
     table.style.background = school2color[global_data.school];

@@ -16,7 +16,9 @@ bp_infobord = Blueprint('infobord', __name__)
 @login_required
 def edit():
     school = request.args.get("school")
-    return render_template("infobord.html", global_data={"school": school})
+    school_info = dl.settings.get_configuration_setting("school-configuration")[school]
+    field_info = dl.settings.get_configuration_setting("field-configuration")
+    return render_template("infobord.html", global_data={"school": school, "school_info": school_info, "field_info": field_info})
 
 @bp_infobord.route('/infobordview', methods=['GET'])
 def view():
@@ -29,8 +31,11 @@ def view():
     infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", view_date)])
     infos = [i.to_dict() for i in infos]
     extra_info = dl.extra_info.get([("school", "=", school)])
-    return render_template("infobord_view.html", global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"],
-                                                              "font_size": font_size, "width": width, "preview": preview, "date": view_date, "extra_info": extra_info.to_dict() if extra_info else None})
+    school_info = dl.settings.get_configuration_setting("school-configuration")[school]
+    field_info = dl.settings.get_configuration_setting("field-configuration")
+    global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"], "font_size": font_size, "width": width, "preview": preview,
+                 "date": view_date, "extra_info": extra_info.to_dict() if extra_info else None, "school_info": school_info, "field_info": field_info}
+    return render_template("infobord_view.html", global_data=global_data)
 
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE"])
 @login_required

@@ -1,16 +1,6 @@
 import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post} from "../common/common.js";
 
-const table_meta = [
-    {value: "lesuur", label: "Lesuur", source: "data", type: "int", size: 3},
-    {value: "leerkracht", label: "Te vervangen", source: "data", size: 20},
-    {value: "klas", label: "Klas", source: "data", size: 10},
-    {value: "info", label: "Taak/Toets", source: "data", size: 15},
-    {value: "locatie", label: "Lokaal", source: "data", size: 15},
-    {value: "vervanger", label: "Vervanger", source: "data", size: 20},
-]
-
-
 class ExtraInfo {
     static quill_toolbar_options = [
         ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
@@ -78,6 +68,36 @@ const extra_info = new ExtraInfo();
 
 let vervangers = {};
 const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
+    const __draw_row = (item) => {
+        const tr = document.createElement("tr");
+        table.appendChild(tr);
+        tr.dataset["id"] = item.id;
+        for (const field of global_data.school_info.fields) {
+            const column = global_data.field_info[field];
+            const td = document.createElement("td");
+            tr.appendChild(td);
+            const type = "type" in column ? column.type : "string";
+            if (column.source === "value" && field in string2value) {
+                td.innerHTML = string2value[field];
+            } else if (column.source === "vervanger") {
+                const select = document.createElement("select")
+                td.appendChild(select);
+                select.dataset.type = "vervanger"
+                select.hidden = true;
+                if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
+            } else {
+                const input = document.createElement("input");
+                td.appendChild(input);
+                input.dataset.field = field;
+                input.dataset.type = type;
+                input.value = item[field];
+                input.size = column.size;
+                if ("cb" in column && column.cb in string2cb) input.addEventListener("input", string2cb[column.cb]);
+            }
+        }
+
+    }
+
     const __lesuur_changed = e => {
         const select = e.target.closest("tr").querySelector("[data-type=vervanger]");
         if (e.target.value in vervangers) {
@@ -89,21 +109,22 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
             select.hidden = true;
         }
     }
+
     const __vervanger_changed = e => {
         const value = e.target.value;
         const vervanger_field = e.target.closest("tr").querySelector("[data-field=vervanger]");
         vervanger_field.value = value;
     }
-    const table_meta = [
-        {value: action_buttons, label: "Actie", source: "value"},
-        {value: "lesuur", label: "Lesuur", source: "data", type: "int", size: 3, cb: __lesuur_changed},
-        {value: "leerkracht", label: "Te vervangen", source: "data", size: 20},
-        {value: "klas", label: "Klas", source: "data", size: 10},
-        {value: "info", label: "Taak/Toets", source: "data", size: 15},
-        {value: "locatie", label: "Lokaal", source: "data", size: 15},
-        {value: "vervanger", label: "Vervanger", source: "data", size: 20},
-        {value: "vervanger", label: "Selecteer", source: "vervanger", size: 20, cb: __vervanger_changed},
-    ]
+
+    const string2cb = {
+        lesuur_changed: __lesuur_changed,
+        vervanger_changed: __vervanger_changed
+    }
+
+    const string2value = {
+        action_buttons
+    }
+
     const info_table = document.getElementById("info-table");
     let table = null;
     if (add_to_table) {
@@ -114,78 +135,30 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
         info_table.appendChild(table);
         const tr = document.createElement("tr");
         table.appendChild(tr);
-        for (const column of table_meta) {
+        for (const field of global_data.school_info.fields) {
+            const column = global_data.field_info[field];
             const th = document.createElement("th");
             tr.appendChild(th);
             th.innerHTML = column.label;
         }
     }
     if (data.length > 0) { // use items from database
-        for (const item of data) {
-            const tr = document.createElement("tr");
-            table.appendChild(tr);
-            tr.dataset["id"] = item.id;
-            for (const column of table_meta) {
-                const td = document.createElement("td");
-                tr.appendChild(td);
-                const type = "type" in column ? column.type : "string";
-                if (column.source === "value") {
-                    td.innerHTML = column.value;
-                } else if (column.source === "vervanger") {
-                    const select = document.createElement("select")
-                    td.appendChild(select);
-                    select.dataset.type = "vervanger"
-                    select.hidden = true;
-                    if ("cb" in column) select.addEventListener("change", column.cb);
-                } else {
-                    const input = document.createElement("input");
-                    td.appendChild(input);
-                    input.dataset.field = column.value;
-                    input.dataset.type = type;
-                    input.value = item[column.value];
-                    input.size = column.size;
-                    if ("cb" in column) input.addEventListener("input", column.cb);
-                }
-            }
-        }
-
+        for (const item of data) __draw_row(item)
     } else { // empty table
+        const dummy_item = Object.fromEntries(global_data.school_info.fields.map(i => [i, ""]));
         for (let i = 0; i < nbr_rows; i++) {
-            const tr = document.createElement("tr");
-            table.appendChild(tr);
-            tr.dataset["id"] = i;
-            for (const column of table_meta) {
-                const td = document.createElement("td");
-                tr.appendChild(td);
-                const type = "type" in column ? column.type : "string";
-                if (column.source === "value") {
-                    td.innerHTML = column.value;
-                } else if (column.source === "vervanger") {
-                    const select = document.createElement("select")
-                    td.appendChild(select);
-                    select.dataset.type = "vervanger"
-                    select.hidden = true;
-                    if ("cb" in column) select.addEventListener("change", column.cb);
-                } else {
-                    const input = document.createElement("input");
-                    td.appendChild(input);
-                    input.dataset.field = column.value;
-                    input.dataset.type = type;
-                    input.value = "";
-                    input.size = column.size;
-                    if ("cb" in column) input.addEventListener("input", column.cb);
-                }
-            }
-
+            dummy_item.id = -1;
+            __draw_row(dummy_item)
         }
     }
     // trigger the callbacks on columns/rows
     const rows = Array.from(table.querySelectorAll("tr"));
     rows.shift();
     for (const row of rows) {
-        for (const column of table_meta) {
+        for (const field of global_data.school_info.fields) {
+            const column = global_data.field_info[field];
             if (column.source === "data" && "cb" in column) {
-                row.querySelector(`td [data-field=${column.value}]`).dispatchEvent(new Event("input"));
+                row.querySelector(`td [data-field=${field}]`).dispatchEvent(new Event("input"));
             }
         }
     }
@@ -198,7 +171,7 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
     info_table.querySelectorAll("input").forEach(e => e.addEventListener("input", () => document.getElementById("info-save").classList.add("blink-button")));
 }
 
-const __init_select_date = () => {
+const __init = () => {
     const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
 
     info_date.innerHTML = "";
@@ -253,8 +226,7 @@ const __info_save = async () => {
             if (column.dataset.type === "int" && column.value !== "") {
                 const value = parseInt(column.value);
                 if (isNaN(value)) {
-                    const column_meta = table_meta.filter(i => i.value === column.dataset.field)[0];
-                    bootbox.alert(`Opgepast, in kolom "${column_meta.label}" mag alleen een getal staan`)
+                    bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
                     return
                 }
                 item[field] = value;
@@ -295,8 +267,7 @@ const __info_sort = async () => {
                 column.value = column.value === "" ? 0 : column.value;
                 const value = parseInt(column.value);
                 if (isNaN(value)) {
-                    const column_meta = table_meta.filter(i => i.value === column.dataset.field)[0];
-                    bootbox.alert(`Opgepast, in kolom "${column_meta.label}" mag alleen een getal staan`)
+                    bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
                     return
                 }
                 item[field] = value;
@@ -346,7 +317,7 @@ $(document).ready(async function () {
         base_init({});
     else
         base_init({button_menu_items});
-    __init_select_date();
+    __init();
 
     document.getElementById("preview").addEventListener("click", () => {
         window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date.value + "&fontsize=x-large&preview=true", "_blank");

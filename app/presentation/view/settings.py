@@ -54,7 +54,9 @@ settings_formio = {"display": "form", "components": [
         {"label": "Nieuwe gebruikers via smartschool login?", "tooltip": "Mogen nieuwe gebruikers inloggen via de Smartschool OAuth2?", "tableView": false, "key": "generic-new-via-smartschool", "type": "checkbox", "input": true, "defaultValue": false},
         {"label": "Nieuwe gebruikers via Smartschool: standaard niveau", "labelPosition": "left-left", "widget": "choicesjs", "tooltip": "Standaard niveau wanneer een gebruiker voor de eerste maal aanmeldt via Smartschool OAuth2", "tableView": true, "defaultValue": 1, "data": {"values": [
           {"label": "Gebruiker", "value": "1"}, {"label": "Gebruiker+", "value": "2"}, {"label": "Toezichthouder", "value": "3"}, {"label": "Toezichthouder+", "value": "4"},
-          {"label": "Administrator", "value": "5"}]}, "key": "generic-new-via-smartschool-default-level", "type": "select", "input": true, "labelWidth": 60}]}]},
+          {"label": "Administrator", "value": "5"}]}, "key": "generic-new-via-smartschool-default-level", "type": "select", "input": true, "labelWidth": 60},
+        {"label": "Scholen configuratie (YAML)", "applyMaskOn": "change", "autoExpand": false, "tableView": true, "validateWhenHidden": false, "key": "school-configuration", "type": "textarea", "input": true},
+        {"label": "Velden configuratie (YAML)", "applyMaskOn": "change", "tableView": true, "validateWhenHidden": false, "key": "field-configuration", "type": "textarea", "input": true, "inputFormat": "plain", "keyModified": true}]}]},
     {"label": "Cron-generic", "tableView": false, "key": "cron-generic", "type": "container", "input": true, "components": [
       {"title": "Cron: generiek", "theme": "primary", "collapsible": true, "key": "cron-generic", "type": "panel", "label": "Smartschool", "collapsed": true, "input": false, "tableView": false, "components": [
         {"label": "Opslaan ", "showValidations": false, "theme": "warning", "tableView": false, "key": "submit", "type": "button", "input": true},

@@ -30,8 +30,9 @@ from functools import wraps
 # 0.12-extra-info-0.4: added extra info.  Bugfix in models.py
 # 0.15: merge from 0.12-extra-info-0.4
 # 0.16: small bugfix
+# 0.17: small bugfixes.  Added field stamlokaal.  Columns can be configured per school.
 
-version = "0.16"
+version = "0.17"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
