@@ -34,8 +34,9 @@ from functools import wraps
 # 0.18: update on models, update, add.  When info is updated, do not create new databaseentry, but update existing.
 # 0.19: added staff field to track who add a row.  Bugfixed deleting rows
 # 0.20: extra-info, changed type to String.
+# 0.21: small update
 
-version = "0.@)"
+version = "0.21"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
