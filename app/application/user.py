@@ -1,3 +1,4 @@
+from werkzeug.security import generate_password_hash, check_password_hash
 import sys, qrcode, secrets, base64, io
 from app import data as dl
 from flask import request
@@ -15,6 +16,8 @@ def add(data):
         if user:
             log.error(f'Error, user {user.username} already exists')
             return {"status": "warning", "msg": f'Fout, gebruiker "{user.username}" bestaat al'}
+        if 'password' in data:
+            data['password_hash'] = generate_password_hash(data['password'])
         user = dl.user.add(data)
         data = {k: v for k, v in data.items() if k not in ('username', 'password', 'password_hash')}
         log.info(f"Add user: {data}")
@@ -26,18 +29,17 @@ def add(data):
 
 def update(data):
     try:
-        user = dl.user.get(('id', "=", data['id']))
+        if 'password' in data:
+            data['password_hash'] = generate_password_hash(data['password'])
+        user = dl.user.update(data)
         if user:
-            del data['id']
-            user = dl.user.update(user, data)
-            if user:
-                data = {k: v for k, v in data.items() if k not in ('username', 'password', 'password_hash')}
-                log.info(f"Update user: {data}")
-                return {"status": "ok", "msg": f"Gebruiker, {user.username} aangepast."}
+            data = {k: v for k, v in data.items() if k not in ('username', 'password', 'password_hash')}
+            log.info(f"Update user: {data}")
+            return {"status": "ok", "msg": f"Gebruiker, {user.username} aangepast."}
         return {"status": "warning", "msg": f"Gebruiker met id {data['id']} bestaat niet"}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return {"status": "error", "data": str(e)}
+        return {"status": "error", "msg": str(e)}
 
 
 def delete(ids):

@@ -42,11 +42,19 @@ def add_multiple(model, data=[], timestamp=False):
     return []
 
 
-def update_single(model, obj, data={}, commit=True, timestamp=False):
+def update_single(model, data={}, commit=True, timestamp=False):
     try:
+        if "obj" in data:
+            obj = data["obj"]
+            del (data["obj"])
+        elif "id" in data:
+            obj = model.query.filter(model.id == data["id"]).first()
+            del (data["id"])
+        else:
+            return None
         for k, v in data.items():
             if hasattr(obj, k):
-                if type(getattr(model, k)) == type(v):
+                if type(getattr(obj, k)) == type(v):
                         setattr(obj, k, v.strip() if isinstance(v, str) else v)
         if timestamp:
             obj.timestamp = datetime.datetime.now()
@@ -62,9 +70,7 @@ def update_single(model, obj, data={}, commit=True, timestamp=False):
 def update_multiple(model, data = [], timestamp=False):
     try:
         for d in data:
-            item = d["item"]
-            del(d["item"])
-            update_single(model, item, d, commit=False, timestamp=timestamp)
+            update_single(model, d, commit=False, timestamp=timestamp)
         db.session.commit()
     except Exception as e:
         db.session.rollback()

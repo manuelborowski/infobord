@@ -77,15 +77,11 @@ def commit():
     return app.data.models.commit()
 
 def add(data = {}):
-    if 'password' in data:
-        data['password_hash'] = generate_password_hash(data['password'])
     return dl.models.add_single(User, data)
 
 
-def update(user, data={}):
-    if 'password' in data:
-        data['password_hash'] = generate_password_hash(data['password'])
-    return dl.models.update_single(User, user, data)
+def update(data={}):
+    return dl.models.update_single(User, data)
 
 
 def get_m(filters=[], fields=[], order_by=None, first=False, count=False, active=True):

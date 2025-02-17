@@ -1,5 +1,5 @@
 import {base_init} from "../base.js";
-import {fetch_delete, fetch_get, fetch_post} from "../common/common.js";
+import {fetch_delete, fetch_get, fetch_post, fetch_update} from "../common/common.js";
 
 class ExtraInfo {
     static quill_toolbar_options = [
@@ -41,6 +41,8 @@ class ExtraInfo {
         this.__location = document.getElementById("extra-info-location");
         this.__location.innerHTML = "";
         ExtraInfo.location_options.forEach(o => this.__location.add(new Option(o.label, o.value)));
+        this.quill.on("text-change", () => info_save.classList.add("blink-button"));
+        this.__location.addEventListener("input", () => info_save.classList.add("blink-button"));
     }
 
     content_get() {
@@ -49,7 +51,16 @@ class ExtraInfo {
 
     async content_set(msg) {
         await this.quill.clipboard.dangerouslyPasteHTML(msg);
-        this.quill.on("text-change", () => document.getElementById("info-save").classList.add("blink-button"));
+        info_save.classList.remove("blink-button");
+    }
+
+    id_get() {
+        return document.getElementById("extra-info").dataset.id;
+    }
+
+    id_set(id) {
+        document.getElementById("extra-info").dataset.id = id;
+        info_save.classList.remove("blink-button");
     }
 
     location_get() {
@@ -58,13 +69,15 @@ class ExtraInfo {
 
     location_set(location) {
         this.__location.value = location;
-        this.__location.addEventListener("input", () => document.getElementById("info-save").classList.add("blink-button"));
+        info_save.classList.remove("blink-button");
     }
 }
 
 const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
 const info_date = document.getElementById("info-date");
+const info_table = document.getElementById("info-table");
 const extra_info = new ExtraInfo();
+let info_save = null;
 
 let vervangers = {};
 const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
@@ -125,7 +138,6 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
         action_buttons
     }
 
-    const info_table = document.getElementById("info-table");
     let table = null;
     if (add_to_table) {
         table = info_table.querySelector("table");
@@ -168,19 +180,20 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
         tr.remove();
     }));
     // attach an eventhandler on each input of the table so that, when at least on input is changed, the save button begins to blink
-    info_table.querySelectorAll("input").forEach(e => e.addEventListener("input", () => document.getElementById("info-save").classList.add("blink-button")));
+    info_table.querySelectorAll("input").forEach(e => e.addEventListener("input", () => info_save.classList.add("blink-button")));
 }
 
-const __init = () => {
+const __info_load_page = (view_date=null) => {
     const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
 
     info_date.innerHTML = "";
     let date = new Date();
-
     for (let dag = 0; dag < 21; dag++) {
         let day_of_week = date.getDay() % 7;
+        let date_label = date.toISOString().split("T")[0];
+        if (dag === 0 && !view_date) view_date = date_label;
         if (dagen[day_of_week] !== "") {
-            info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date.toISOString().split("T")[0]})`, date.toISOString().split("T")[0], dag === 0, dag === 0));
+            info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date_label})`, date_label, view_date === date_label, view_date === date_label));
             if (day_of_week === 5) {
                 const option = new Option("-------------------------", null);
                 option.disabled = true;
@@ -208,6 +221,7 @@ const __init = () => {
         const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
         if (resp_extra.data) {
             extra_info.content_set(resp_extra.data.info);
+            extra_info.id_set(resp_extra.data.id);
             extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
         }
     });
@@ -215,9 +229,10 @@ const __init = () => {
 }
 
 const __info_save = async () => {
-    const rows = document.querySelectorAll('[data-id]');
+    const rows = info_table.querySelectorAll('[data-id]');
     const date = document.getElementById("info-date").value;
-    let data = []
+    let info_add = []
+    let info_update = []
     for (const row of rows) {
         let item = {school: global_data.school, datum: `${date}`};
         const columns = row.querySelectorAll("[data-field]");
@@ -233,13 +248,27 @@ const __info_save = async () => {
             } else
                 item[field] = column.value
         }
-        if (item.lesuur > 0) data.push(item);
+        if (item.lesuur > 0)
+            if (row.dataset.id === "-1") {
+                info_add.push(item);
+            } else {
+                item.id = row.dataset.id;
+                info_update.push(item);
+            }
     }
-    await fetch_post("infobord.infobord", data, {school: global_data.school, datum: info_date.value});
+    if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date.value});
+    if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date.value});
     const [location, lesuur] = extra_info.location_get().split("-");
-    data = {lesuur: parseInt(lesuur), location, info: extra_info.content_get(), school: global_data.school};
-    await fetch_post("infobord.extrainfo", data, {school: global_data.school});
-    document.getElementById("info-save").classList.remove("blink-button");
+    const extra_info_data = {lesuur: parseInt(lesuur), location, info: extra_info.content_get(), school: global_data.school};
+    if (extra_info.id_get() === "-1") {
+        await fetch_post("infobord.extrainfo", extra_info_data, {school: global_data.school});
+    } else {
+        extra_info_data.id = extra_info.id_get();
+        await fetch_update("infobord.extrainfo", extra_info_data, {school: global_data.school});
+    }
+    info_save.classList.remove("blink-button");
+    // redraw the page if new lines are added or extra-info is used for the first time.  This makes sure the id's are correctly set.
+    __info_load_page(info_date.value);
 }
 
 const __info_delete = async () => {
@@ -256,10 +285,10 @@ const __info_delete = async () => {
 }
 
 const __info_sort = async () => {
-    const rows = document.querySelectorAll('[data-id]');
+    const rows = info_table.querySelectorAll('[data-id]');
     let data = []
     for (const row of rows) {
-        let item = {school: global_data.school};
+        let item = {school: global_data.school, id: row.dataset.id};
         const columns = row.querySelectorAll("[data-field]");
         for (const column of columns) {
             const field = column.dataset.field;
@@ -317,7 +346,8 @@ $(document).ready(async function () {
         base_init({});
     else
         base_init({button_menu_items});
-    __init();
+    info_save = document.getElementById("info-save")
+    __info_load_page();
 
     document.getElementById("preview").addEventListener("click", () => {
         window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date.value + "&fontsize=x-large&preview=true", "_blank");

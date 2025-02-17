@@ -32,8 +32,8 @@ def add_m(data=[]):
     return app.data.models.add_multiple(ExtraInfo, data)
 
 
-def update(ExtraInfo, data={}, commit=True):
-    return app.data.models.update_single(ExtraInfo, ExtraInfo, data, commit)
+def update(data={}, commit=True):
+    return app.data.models.update_single(ExtraInfo, data, commit)
 
 
 def update_m(data=[]):

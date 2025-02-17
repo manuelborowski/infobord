@@ -42,7 +42,7 @@ def add_m(data=[]):
 
 
 def update(Infobord, data={}, commit=True):
-    return app.data.models.update_single(Infobord, Infobord, data, commit)
+    return app.data.models.update_single(Infobord, data, commit)
 
 
 def update_m(data=[]):

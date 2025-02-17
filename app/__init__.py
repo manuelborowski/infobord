@@ -31,8 +31,9 @@ from functools import wraps
 # 0.15: merge from 0.12-extra-info-0.4
 # 0.16: small bugfix
 # 0.17: small bugfixes.  Added field stamlokaal.  Columns can be configured per school.
+# 0.18: update on models, update, add.  When info is updated, do not create new databaseentry, but update existing.
 
-version = "0.17"
+version = "0.18"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

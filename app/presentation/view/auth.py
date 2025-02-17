@@ -20,7 +20,7 @@ def login():
             if user is not None and user.verify_password(request.form["password"]):
                 login_user(user)
                 log.info(f'user {user.username} logged in')
-                user = dl.user.update(user, {"last_login": datetime.datetime.now()})
+                user = dl.user.update({"last_login": datetime.datetime.now(), "obj": user})
                 if not user:
                     log.error('Could not save timestamp')
                 # Ok, continue
@@ -65,8 +65,8 @@ def login_ss():
                 if user:
                     profile['first_name'] = profile['name']
                     profile['last_name'] = profile['surname']
-                    user.email = profile['email']
-                    user = dl.user.update(user, profile)
+                    profile['obj'] = user
+                    user = dl.user.update(profile)
                 else:
                     if dl.settings.get_configuration_setting('generic-new-via-smartschool'):
                         default_level = dl.settings.get_configuration_setting('generic-new-via-smartschool-default-level')

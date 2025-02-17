@@ -37,13 +37,13 @@ def view():
                  "date": view_date, "extra_info": extra_info.to_dict() if extra_info else None, "school_info": school_info, "field_info": field_info}
     return render_template("infobord_view.html", global_data=global_data)
 
-@bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE"])
+@bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE", "UPDATE"])
 @login_required
 def infobord():
     school = request.args.get("school")
     datum = request.args.get("datum")
     infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", datum)])
-    if request.method in ["GET"]:
+    if request.method == "GET":
         week_old_infos = []
         for i in range(1, 4):
             date = datetime.datetime.strptime(datum, "%Y-%m-%d") - datetime.timedelta(days= 7 * i)
@@ -53,27 +53,28 @@ def infobord():
         return {"data": infos, "vervangers": week_old_infos}
     if request.method == "POST":
         data = json.loads(request.data)
-        # remove old entries
-        dl.infobord.delete_m(objs=infos)
         dl.infobord.add_m(data)
+    if request.method == "UPDATE":
+        data = json.loads(request.data)
+        dl.infobord.update_m(data)
     if request.method == "DELETE":
         dl.infobord.delete_m(objs=infos)
     return {}
 
 
-@bp_infobord.route('/extrainfo', methods=['GET', "POST"])
+@bp_infobord.route('/extrainfo', methods=['GET', "POST", "UPDATE"])
 @login_required
 def extrainfo():
     school = request.args.get("school")
-    extra_info = dl.extra_info.get([("school", "=", school)])
     if request.method in ["GET"]:
+        extra_info = dl.extra_info.get([("school", "=", school)])
         return {"data": extra_info.to_dict() if extra_info else None}
     if request.method == "POST":
         data = json.loads(request.data)
-        if extra_info:
-            dl.extra_info.update(extra_info, data)
-        else:
-            dl.extra_info.add(data)
+        dl.extra_info.add(data)
+    if request.method == "UPDATE":
+        data = json.loads(request.data)
+        dl.extra_info.update(data)
     return {}
 
 @bp_infobord.route('/extrainfoview', methods=['GET'])
