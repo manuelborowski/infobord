@@ -37,7 +37,7 @@ const __draw_table = () => {
     table.appendChild(tr);
     for (const field of global_data.school_info.fields) {
         const column = global_data.field_info[field];
-        if (column.source === "data") {
+        if (column.source === "data" && "view" in column && column.view) {
             const th = document.createElement("th");
             tr.appendChild(th);
             th.innerHTML = column.label;
@@ -71,7 +71,7 @@ const __draw_table = () => {
         table.appendChild(tr);
         for (const field of global_data.school_info.fields) {
             const column = global_data.field_info[field];
-            if (column.source === "data") {
+            if (column.source === "data" && "view" in column && column.view) {
                 const td = document.createElement("td");
                 tr.appendChild(td);
                 td.innerHTML = item[field];

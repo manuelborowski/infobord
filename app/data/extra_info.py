@@ -15,6 +15,7 @@ class ExtraInfo(db.Model, SerializerMixin):
     location = db.Column(db.String(256), default='')
     school = db.Column(db.String(256), default='')
     info = db.Column(db.String(4096), default='')
+    staff = db.Column(db.String(256), default='')
 
     @property
     def person_id(self):

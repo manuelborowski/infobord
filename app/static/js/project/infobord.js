@@ -78,6 +78,13 @@ const info_date = document.getElementById("info-date");
 const info_table = document.getElementById("info-table");
 const extra_info = new ExtraInfo();
 let info_save = null;
+let info_delete = [];
+
+const __remove_row = row => {
+    if (row.dataset.id !== "-1") info_delete.push(row.dataset.id);
+    row.remove();
+    info_save.classList.add("blink-button");
+}
 
 let vervangers = {};
 const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
@@ -160,6 +167,7 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
         const dummy_item = Object.fromEntries(global_data.school_info.fields.map(i => [i, ""]));
         for (let i = 0; i < nbr_rows; i++) {
             dummy_item.id = -1;
+            dummy_item.staff = current_user.username;
             __draw_row(dummy_item)
         }
     }
@@ -177,13 +185,13 @@ const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
     // attach an eventhandler on the "remove" button in each row
     info_table.querySelectorAll(".btn-item-delete").forEach(r => r.addEventListener("click", e => {
         const tr = e.target.closest("tr");
-        tr.remove();
+        __remove_row(tr)
     }));
     // attach an eventhandler on each input of the table so that, when at least on input is changed, the save button begins to blink
     info_table.querySelectorAll("input").forEach(e => e.addEventListener("input", () => info_save.classList.add("blink-button")));
 }
 
-const __info_load_page = (view_date=null) => {
+const __info_load_page = (view_date = null) => {
     const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
 
     info_date.innerHTML = "";
@@ -258,6 +266,7 @@ const __info_save = async () => {
     }
     if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date.value});
     if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date.value});
+    if (info_delete.length > 0) await fetch_delete("infobord.infobord", {ids: info_delete.join(",")});
     const [location, lesuur] = extra_info.location_get().split("-");
     const extra_info_data = {lesuur: parseInt(lesuur), location, info: extra_info.content_get(), school: global_data.school};
     if (extra_info.id_get() === "-1") {
@@ -274,11 +283,11 @@ const __info_save = async () => {
 const __info_delete = async () => {
     bootbox.confirm({
         size: "small",
-        message: "U gaat alle lijnen wissen, zeker?",
+        message: "U gaat alle rijen wissen, zeker?",
         callback: async result => {
             if (result) {
-                const resp = await fetch_delete("infobord.infobord", {school: global_data.school, datum: info_date.value})
-                if (resp) __draw_table();
+                const rows = info_table.querySelectorAll('[data-id]');
+                for (const row of rows) __remove_row(row);
             }
         }
     });

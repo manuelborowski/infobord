@@ -22,6 +22,8 @@ class Infobord(db.Model, SerializerMixin):
     info = db.Column(db.String(256), default='')
     extra = db.Column(db.String(256), default='')
     datum = db.Column(db.String(256), default='')
+    staff = db.Column(db.String(256), default='')
+
 
     active = db.Column(db.Boolean, default=True)    # long term
 
