@@ -6,7 +6,6 @@ import json, datetime
 import logging
 from app import MyLogFilter, top_log_handle, app
 from flask_login import login_required, current_user
-
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 

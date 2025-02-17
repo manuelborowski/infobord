@@ -2,7 +2,7 @@ import sys
 import app.data.models
 from app import db
 from sqlalchemy_serializer import SerializerMixin
-
+from sqlalchemy import String
 
 class ExtraInfo(db.Model, SerializerMixin):
     __tablename__ = 'extra_infos'
@@ -14,7 +14,7 @@ class ExtraInfo(db.Model, SerializerMixin):
     lesuur = db.Column(db.Integer(), default=0)
     location = db.Column(db.String(256), default='')
     school = db.Column(db.String(256), default='')
-    info = db.Column(db.String(4096), default='')
+    info = db.Column(String, default='')
     staff = db.Column(db.String(256), default='')
 
     @property

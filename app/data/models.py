@@ -1,6 +1,12 @@
-from app import log, db
+from app import db
 from sqlalchemy import text, desc, func
 import sys, datetime
+
+#logging on file level
+import logging
+from app import MyLogFilter, top_log_handle, app
+log = logging.getLogger(f"{top_log_handle}.{__name__}")
+log.addFilter(MyLogFilter())
 
 def commit():
     try:
