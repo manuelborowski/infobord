@@ -36,8 +36,9 @@ from functools import wraps
 # 0.20: extra-info, changed type to String.
 # 0.21: small update
 # 0.22: moved code into Info class.  Bugfixed models
+# 0.23: cannot change date when current table is not saved.
 
-version = "0.22"
+version = "0.23"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

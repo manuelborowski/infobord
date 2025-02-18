@@ -211,8 +211,18 @@ class Info {
             }
             date.setDate(date.getDate() + 1);
         }
+        this.date = info_date.value;
         // when the date has changed, load en draw a new table
         info_date.addEventListener("change", async e => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            // cannot switch date when current table is not saved yet
+            if (this.info_save_btn.classList.contains("blink-button")) {
+                await bootbox.alert("Opgepast, je moet eerst bewaren vooraleer een andere datum te kiezen");
+                info_date.value = this.date;
+                return
+            }
+            this.date = e.target.value;
             const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
             if (resp_info) {
                 resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
@@ -332,7 +342,6 @@ class Info {
     }
 
 }
-
 
 $(document).ready(async function () {
     const button_menu_items = [
