@@ -60,8 +60,9 @@ def update_single(model, data={}, commit=True, timestamp=False):
             return None
         for k, v in data.items():
             if hasattr(obj, k):
-                if type(getattr(obj, k)) == type(v):
-                        setattr(obj, k, v.strip() if isinstance(v, str) else v)
+                # if type(getattr(obj, k)) == type(v):
+                if getattr(model, k).expression.type.python_type == type(v):
+                    setattr(obj, k, v.strip() if isinstance(v, str) else v)
         if timestamp:
             obj.timestamp = datetime.datetime.now()
         if commit:

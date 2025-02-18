@@ -1,6 +1,8 @@
 import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post, fetch_update} from "../common/common.js";
 
+const info_date = document.getElementById("info-date");
+
 class ExtraInfo {
     static quill_toolbar_options = [
         ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
@@ -36,13 +38,15 @@ class ExtraInfo {
         {value: "lesuur-9", label: "In lesuur 9"},
     ]
 
-    constructor() {
+    constructor(info_save_btn) {
         this.quill = new Quill(document.getElementById("extra-info"), {modules: {toolbar: ExtraInfo.quill_toolbar_options}, theme: 'snow', placeholder: "Typ hier je boodschap"});
         this.__location = document.getElementById("extra-info-location");
         this.__location.innerHTML = "";
         ExtraInfo.location_options.forEach(o => this.__location.add(new Option(o.label, o.value)));
-        this.quill.on("text-change", () => info_save.classList.add("blink-button"));
-        this.__location.addEventListener("input", () => info_save.classList.add("blink-button"));
+        this.quill.on("text-change", () => this.info_save_btn.classList.add("blink-button"));
+        this.__location.addEventListener("input", () => this.info_save_btn.classList.add("blink-button"));
+        this.info_save_btn = info_save_btn;
+
     }
 
     content_get() {
@@ -51,7 +55,7 @@ class ExtraInfo {
 
     async content_set(msg) {
         await this.quill.clipboard.dangerouslyPasteHTML(msg);
-        info_save.classList.remove("blink-button");
+        this.info_save_btn.classList.remove("blink-button");
     }
 
     id_get() {
@@ -60,7 +64,7 @@ class ExtraInfo {
 
     id_set(id) {
         document.getElementById("extra-info").dataset.id = id;
-        info_save.classList.remove("blink-button");
+        this.info_save_btn.classList.remove("blink-button");
     }
 
     location_get() {
@@ -69,297 +73,308 @@ class ExtraInfo {
 
     location_set(location) {
         this.__location.value = location;
-        info_save.classList.remove("blink-button");
+        this.info_save_btn.classList.remove("blink-button");
     }
 }
 
-const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
-const info_date = document.getElementById("info-date");
-const info_table = document.getElementById("info-table");
-const extra_info = new ExtraInfo();
-let info_save = null;
-let info_delete = [];
+class Info {
+    static info_table_tbl = document.getElementById("info-table");
 
-const __remove_row = row => {
-    if (row.dataset.id !== "-1") info_delete.push(row.dataset.id);
-    row.remove();
-    info_save.classList.add("blink-button");
-}
+    vervangers = {};
 
-let vervangers = {};
-const __draw_table = (data = [], nbr_rows = 20, add_to_table = false) => {
-    const __draw_row = (item) => {
-        const tr = document.createElement("tr");
-        table.appendChild(tr);
-        tr.dataset["id"] = item.id;
-        for (const field of global_data.school_info.fields) {
-            const column = global_data.field_info[field];
-            const td = document.createElement("td");
-            tr.appendChild(td);
-            const type = "type" in column ? column.type : "string";
-            if (column.source === "value" && field in string2value) {
-                td.innerHTML = string2value[field];
-            } else if (column.source === "vervanger") {
-                const select = document.createElement("select")
-                td.appendChild(select);
-                select.dataset.type = "vervanger"
+    constructor(info_save_btn) {
+        this.info_save_btn = info_save_btn;
+        this.info_delete = [];
+        this.extra_info = new ExtraInfo(info_save_btn);
+    }
+
+    draw = (data = [], nbr_rows = 20, add_to_table = false) => {
+        const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
+        const __draw_row = (item) => {
+            const tr = document.createElement("tr");
+            table.appendChild(tr);
+            tr.dataset["id"] = item.id;
+            for (const field of global_data.school_info.fields) {
+                const column = global_data.field_info[field];
+                const td = document.createElement("td");
+                tr.appendChild(td);
+                const type = "type" in column ? column.type : "string";
+                if (column.source === "value" && field in string2value) {
+                    td.innerHTML = string2value[field];
+                } else if (column.source === "vervanger") {
+                    const select = document.createElement("select")
+                    td.appendChild(select);
+                    select.dataset.type = "vervanger"
+                    select.hidden = true;
+                    if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
+                } else {
+                    const input = document.createElement("input");
+                    td.appendChild(input);
+                    input.dataset.field = field;
+                    input.dataset.type = type;
+                    input.value = item[field];
+                    input.size = column.size;
+                    if ("cb" in column && column.cb in string2cb) input.addEventListener("input", string2cb[column.cb]);
+                }
+            }
+
+        }
+
+        const __lesuur_changed = e => {
+            const select = e.target.closest("tr").querySelector("[data-type=vervanger]");
+            if (e.target.value in this.vervangers) {
+                select.innerHTML = "";
+                select.add(new Option("", "", true, true));
+                this.vervangers[e.target.value].forEach(i => select.add(new Option(i, i)));
+                select.hidden = false;
+            } else {
                 select.hidden = true;
-                if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
-            } else {
-                const input = document.createElement("input");
-                td.appendChild(input);
-                input.dataset.field = field;
-                input.dataset.type = type;
-                input.value = item[field];
-                input.size = column.size;
-                if ("cb" in column && column.cb in string2cb) input.addEventListener("input", string2cb[column.cb]);
             }
         }
 
-    }
+        const __vervanger_changed = e => {
+            const value = e.target.value;
+            const vervanger_field = e.target.closest("tr").querySelector("[data-field=vervanger]");
+            vervanger_field.value = value;
+        }
 
-    const __lesuur_changed = e => {
-        const select = e.target.closest("tr").querySelector("[data-type=vervanger]");
-        if (e.target.value in vervangers) {
-            select.innerHTML = "";
-            select.add(new Option("", "", true, true));
-            vervangers[e.target.value].forEach(i => select.add(new Option(i, i)));
-            select.hidden = false;
+        const string2cb = {
+            lesuur_changed: __lesuur_changed,
+            vervanger_changed: __vervanger_changed
+        }
+
+        const string2value = {
+            action_buttons
+        }
+
+        let table = null;
+        if (add_to_table) {
+            table = Info.info_table_tbl.querySelector("table");
         } else {
-            select.hidden = true;
-        }
-    }
-
-    const __vervanger_changed = e => {
-        const value = e.target.value;
-        const vervanger_field = e.target.closest("tr").querySelector("[data-field=vervanger]");
-        vervanger_field.value = value;
-    }
-
-    const string2cb = {
-        lesuur_changed: __lesuur_changed,
-        vervanger_changed: __vervanger_changed
-    }
-
-    const string2value = {
-        action_buttons
-    }
-
-    let table = null;
-    if (add_to_table) {
-        table = info_table.querySelector("table");
-    } else {
-        info_table.innerHTML = "";
-        table = document.createElement("table");
-        info_table.appendChild(table);
-        const tr = document.createElement("tr");
-        table.appendChild(tr);
-        for (const field of global_data.school_info.fields) {
-            const column = global_data.field_info[field];
-            const th = document.createElement("th");
-            tr.appendChild(th);
-            th.innerHTML = column.label;
-        }
-    }
-    if (data.length > 0) { // use items from database
-        for (const item of data) __draw_row(item)
-    } else { // empty table
-        const dummy_item = Object.fromEntries(global_data.school_info.fields.map(i => [i, ""]));
-        for (let i = 0; i < nbr_rows; i++) {
-            dummy_item.id = -1;
-            dummy_item.staff = current_user.username;
-            __draw_row(dummy_item)
-        }
-    }
-    // trigger the callbacks on columns/rows
-    const rows = Array.from(table.querySelectorAll("tr"));
-    rows.shift();
-    for (const row of rows) {
-        for (const field of global_data.school_info.fields) {
-            const column = global_data.field_info[field];
-            if (column.source === "data" && "cb" in column) {
-                row.querySelector(`td [data-field=${field}]`).dispatchEvent(new Event("input"));
+            Info.info_table_tbl.innerHTML = "";
+            table = document.createElement("table");
+            Info.info_table_tbl.appendChild(table);
+            const tr = document.createElement("tr");
+            table.appendChild(tr);
+            for (const field of global_data.school_info.fields) {
+                const column = global_data.field_info[field];
+                const th = document.createElement("th");
+                tr.appendChild(th);
+                th.innerHTML = column.label;
             }
         }
-    }
-    // attach an eventhandler on the "remove" button in each row
-    info_table.querySelectorAll(".btn-item-delete").forEach(r => r.addEventListener("click", e => {
-        const tr = e.target.closest("tr");
-        __remove_row(tr)
-    }));
-    // attach an eventhandler on each input of the table so that, when at least on input is changed, the save button begins to blink
-    info_table.querySelectorAll("input").forEach(e => e.addEventListener("input", () => info_save.classList.add("blink-button")));
-}
-
-const __info_load_page = (view_date = null) => {
-    const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
-
-    info_date.innerHTML = "";
-    let date = new Date();
-    for (let dag = 0; dag < 21; dag++) {
-        let day_of_week = date.getDay() % 7;
-        let date_label = date.toISOString().split("T")[0];
-        if (dag === 0 && !view_date) view_date = date_label;
-        if (dagen[day_of_week] !== "") {
-            info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date_label})`, date_label, view_date === date_label, view_date === date_label));
-            if (day_of_week === 5) {
-                const option = new Option("-------------------------", null);
-                option.disabled = true;
-                info_date.add(option);
+        if (data.length > 0) { // use items from database
+            for (const item of data) __draw_row(item)
+        } else { // empty table
+            const dummy_item = Object.fromEntries(global_data.school_info.fields.map(i => [i, ""]));
+            for (let i = 0; i < nbr_rows; i++) {
+                dummy_item.id = -1;
+                dummy_item.staff = current_user.username;
+                __draw_row(dummy_item)
             }
         }
-        date.setDate(date.getDate() + 1);
-    }
-    info_date.addEventListener("change", async e => {
-        const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
-        if (resp_info) {
-            resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
-            // prepare list of vervangers
-            if ("vervangers" in resp_info && resp_info.vervangers.length > 0) {
-                for (const v of resp_info.vervangers) {
-                    if (v.lesuur in vervangers)
-                        vervangers[v.lesuur].push(v.vervanger);
-                    else
-                        vervangers[v.lesuur] = [v.vervanger];
+        // trigger the callbacks on columns/rows
+        const rows = Array.from(table.querySelectorAll("tr"));
+        rows.shift(); // drop header
+        for (const row of rows) {
+            for (const field of global_data.school_info.fields) {
+                const column = global_data.field_info[field];
+                if (column.source === "data" && "cb" in column) {
+                    row.querySelector(`td [data-field=${field}]`).dispatchEvent(new Event("input"));
                 }
             }
-            for (const [l, v] of Object.entries(vervangers)) vervangers[l] = [...new Set(v.sort())]
-            __draw_table(resp_info.data);
         }
-        const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
-        if (resp_extra.data) {
-            extra_info.content_set(resp_extra.data.info);
-            extra_info.id_set(resp_extra.data.id);
-            extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
-        }
-    });
-    info_date.dispatchEvent(new Event("change")); // trigger first load
-}
+        // attach an eventhandler on the "remove" button in each row
+        Info.info_table_tbl.querySelectorAll(".btn-item-delete").forEach(r => r.addEventListener("click", e => {
+            const tr = e.target.closest("tr");
+            this.row_remove(tr)
+        }));
+        // attach an eventhandler on each input of the table so that, when at least on input is changed, the save button begins to blink
+        Info.info_table_tbl.querySelectorAll("input").forEach(e => e.addEventListener("input", () => this.info_save_btn.classList.add("blink-button")));
+    }
 
-const __info_save = async () => {
-    const rows = info_table.querySelectorAll('[data-id]');
-    const date = document.getElementById("info-date").value;
-    let info_add = []
-    let info_update = []
-    for (const row of rows) {
-        let item = {school: global_data.school, datum: `${date}`};
-        const columns = row.querySelectorAll("[data-field]");
-        for (const column of columns) {
-            const field = column.dataset.field;
-            if (column.dataset.type === "int" && column.value !== "") {
-                const value = parseInt(column.value);
-                if (isNaN(value)) {
-                    bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
-                    return
+    load = (view_date = null) => {
+        const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
+        info_date.innerHTML = "";
+        let date = new Date();
+        for (let dag = 0; dag < 21; dag++) {
+            let day_of_week = date.getDay() % 7;
+            let date_label = date.toISOString().split("T")[0];
+            if (dag === 0 && !view_date) view_date = date_label;
+            if (dagen[day_of_week] !== "") {
+                info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date_label})`, date_label, view_date === date_label, view_date === date_label));
+                if (day_of_week === 5) {
+                    const option = new Option("-------------------------", null);
+                    option.disabled = true;
+                    info_date.add(option);
                 }
-                item[field] = value;
-            } else
-                item[field] = column.value
-        }
-        if (item.lesuur > 0)
-            if (row.dataset.id === "-1") {
-                info_add.push(item);
-            } else {
-                item.id = row.dataset.id;
-                info_update.push(item);
             }
-    }
-    if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date.value});
-    if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date.value});
-    if (info_delete.length > 0) await fetch_delete("infobord.infobord", {ids: info_delete.join(",")});
-    const [location, lesuur] = extra_info.location_get().split("-");
-    const extra_info_data = {lesuur: parseInt(lesuur), location, info: extra_info.content_get(), school: global_data.school};
-    if (extra_info.id_get() === "-1") {
-        await fetch_post("infobord.extrainfo", extra_info_data, {school: global_data.school});
-    } else {
-        extra_info_data.id = extra_info.id_get();
-        await fetch_update("infobord.extrainfo", extra_info_data, {school: global_data.school});
-    }
-    info_save.classList.remove("blink-button");
-    // redraw the page if new lines are added or extra-info is used for the first time.  This makes sure the id's are correctly set.
-    __info_load_page(info_date.value);
-}
-
-const __info_delete = async () => {
-    bootbox.confirm({
-        size: "small",
-        message: "U gaat alle rijen wissen, zeker?",
-        callback: async result => {
-            if (result) {
-                const rows = info_table.querySelectorAll('[data-id]');
-                for (const row of rows) __remove_row(row);
-            }
+            date.setDate(date.getDate() + 1);
         }
-    });
-}
-
-const __info_sort = async () => {
-    const rows = info_table.querySelectorAll('[data-id]');
-    let data = []
-    for (const row of rows) {
-        let item = {school: global_data.school, id: row.dataset.id};
-        const columns = row.querySelectorAll("[data-field]");
-        for (const column of columns) {
-            const field = column.dataset.field;
-            if (column.dataset.type === "int") {
-                column.value = column.value === "" ? 0 : column.value;
-                const value = parseInt(column.value);
-                if (isNaN(value)) {
-                    bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
-                    return
+        // when the date has changed, load en draw a new table
+        info_date.addEventListener("change", async e => {
+            const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
+            if (resp_info) {
+                resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
+                // prepare list of this.vervangers
+                if ("vervangers" in resp_info && resp_info.vervangers.length > 0) {
+                    for (const v of resp_info.vervangers) {
+                        if (v.lesuur in this.vervangers)
+                            this.vervangers[v.lesuur].push(v.vervanger);
+                        else
+                            this.vervangers[v.lesuur] = [v.vervanger];
+                    }
                 }
-                item[field] = value;
-            } else
-                item[field] = column.value
-        }
-        if (item.lesuur > 0) data.push(item);
+                // sort and remove double entries in the list of vervangers
+                for (const [l, v] of Object.entries(this.vervangers)) this.vervangers[l] = [...new Set(v.sort())]
+                this.draw(resp_info.data);
+            }
+            const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
+            if (resp_extra.data) {
+                this.extra_info.content_set(resp_extra.data.info);
+                this.extra_info.id_set(resp_extra.data.id);
+                this.extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
+            }
+        });
+        info_date.dispatchEvent(new Event("change")); // trigger first load
     }
-    data.sort((a, b) => a.lesuur - b.lesuur);
-    __draw_table(data)
-}
 
-const __info_add_rows = nbr => {
-    __draw_table([], nbr, true);
-}
+    save = async () => {
+        const rows = Info.info_table_tbl.querySelectorAll('[data-id]');
+        const date = document.getElementById("info-date").value;
+        let info_add = []
+        let info_update = []
+        for (const row of rows) {
+            let item = {school: global_data.school, datum: `${date}`};
+            const columns = row.querySelectorAll("[data-field]");
+            for (const column of columns) {
+                const field = column.dataset.field;
+                if (column.dataset.type === "int" && column.value !== "") {
+                    const value = parseInt(column.value);
+                    if (isNaN(value)) {
+                        bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
+                        return
+                    }
+                    item[field] = value;
+                } else
+                    item[field] = column.value
+            }
+            if (item.lesuur > 0)
+                if (row.dataset.id === "-1") {
+                    info_add.push(item);
+                } else {
+                    item.id = row.dataset.id;
+                    info_update.push(item);
+                }
+        }
+        if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date.value});
+        if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date.value});
+        if (this.info_delete.length > 0) await fetch_delete("infobord.infobord", {ids: this.info_delete.join(",")});
+        const [location, lesuur] = this.extra_info.location_get().split("-");
+        const extra_info_data = {lesuur: parseInt(lesuur), location, info: this.extra_info.content_get(), school: global_data.school};
+        if (this.extra_info.id_get() === "-1") {
+            await fetch_post("infobord.extrainfo", extra_info_data, {school: global_data.school});
+        } else {
+            extra_info_data.id = this.extra_info.id_get();
+            await fetch_update("infobord.extrainfo", extra_info_data, {school: global_data.school});
+        }
+        this.info_save_btn.classList.remove("blink-button");
+        // redraw the page if new lines are added or extra-info is used for the first time.  This makes sure the id's are correctly set.
+        this.load(info_date.value);
+    }
 
-const button_menu_items = [
-    {
-        type: 'button',
-        id: 'info-save',
-        label: 'Bewaar',
-        cb: () => __info_save()
-    },
-    {
-        type: 'button',
-        id: 'info-sort',
-        label: 'Sorteer',
-        cb: () => __info_sort()
-    },
-    {
-        type: 'button',
-        id: 'info-delete',
-        label: 'Leegmaken',
-        cb: () => __info_delete()
-    },
-    {
-        type: 'button',
-        id: 'info-add',
-        label: '+5 rijen',
-        cb: () => __info_add_rows(5)
-    },
-]
+    delete = async () => {
+        bootbox.confirm({
+            size: "small",
+            message: "U gaat alle rijen wissen, zeker?",
+            callback: async result => {
+                if (result) {
+                    const rows = Info.info_table_tbl.querySelectorAll('[data-id]');
+                    for (const row of rows) this.row_remove(row);
+                }
+            }
+        });
+    }
+
+    sort = async () => {
+        const rows = Info.info_table_tbl.querySelectorAll('[data-id]');
+        let data = []
+        for (const row of rows) {
+            let item = {school: global_data.school, id: row.dataset.id};
+            const columns = row.querySelectorAll("[data-field]");
+            for (const column of columns) {
+                const field = column.dataset.field;
+                if (column.dataset.type === "int") {
+                    column.value = column.value === "" ? 0 : column.value;
+                    const value = parseInt(column.value);
+                    if (isNaN(value)) {
+                        bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
+                        return
+                    }
+                    item[field] = value;
+                } else
+                    item[field] = column.value
+            }
+            if (item.lesuur > 0) data.push(item);
+        }
+        data.sort((a, b) => a.lesuur - b.lesuur);
+        this.draw(data)
+    }
+
+    row_add = nbr => {
+        this.draw([], nbr, true);
+    }
+
+    row_remove = row => {
+        if (row.dataset.id !== "-1") this.info_delete.push(row.dataset.id);
+        row.remove();
+        this.info_save_btn.classList.add("blink-button");
+    }
+
+}
 
 
 $(document).ready(async function () {
+    const button_menu_items = [
+        {
+            type: 'button',
+            id: 'info-save',
+            label: 'Bewaar',
+            cb: () => info.save()
+        },
+        {
+            type: 'button',
+            id: 'info-sort',
+            label: 'Sorteer',
+            cb: () => info.sort()
+        },
+        {
+            type: 'button',
+            id: 'info-delete',
+            label: 'Leegmaken',
+            cb: () => info.delete()
+        },
+        {
+            type: 'button',
+            id: 'info-add',
+            label: '+5 rijen',
+            cb: () => info.row_add(5)
+        },
+    ]
     if (current_user.level < 3)
         base_init({});
     else
         base_init({button_menu_items});
-    info_save = document.getElementById("info-save")
-    __info_load_page();
+
+    const info = new Info(document.getElementById("info-save"))
+    info.load();
 
     document.getElementById("preview").addEventListener("click", () => {
         window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date.value + "&fontsize=x-large&preview=true", "_blank");
     });
+
+    if (performance.getEntriesByType('navigation')[0].type === 'navigate') {
+        console.log("voor de eerste keer bezocht")
+    }
 });
 
