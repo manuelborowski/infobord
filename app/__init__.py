@@ -37,8 +37,10 @@ from functools import wraps
 # 0.21: small update
 # 0.22: moved code into Info class.  Bugfixed models
 # 0.23: cannot change date when current table is not saved.
+# 0.24: local storage, stored when an input changes (and save buttons starts to blink), cleared when saved to database or other date selected and loaded when page is loaded.
+# It is not possible to switch date when current table is not saved.
 
-version = "0.23"
+version = "0.24"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

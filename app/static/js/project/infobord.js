@@ -1,7 +1,7 @@
 import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post, fetch_update} from "../common/common.js";
 
-const info_date = document.getElementById("info-date");
+const info_date_select = document.getElementById("info-date");
 
 class ExtraInfo {
     static quill_toolbar_options = [
@@ -54,8 +54,10 @@ class ExtraInfo {
     }
 
     async content_set(msg) {
+        // disable the eventhandler temporarily else the save button starts blinking when the page is loaded
+        this.quill.off("text-change");
         await this.quill.clipboard.dangerouslyPasteHTML(msg);
-        this.info_save_btn.classList.remove("blink-button");
+        this.quill.on("text-change", () => this.info_save_btn.classList.add("blink-button"));
     }
 
     id_get() {
@@ -64,7 +66,6 @@ class ExtraInfo {
 
     id_set(id) {
         document.getElementById("extra-info").dataset.id = id;
-        this.info_save_btn.classList.remove("blink-button");
     }
 
     location_get() {
@@ -73,7 +74,7 @@ class ExtraInfo {
 
     location_set(location) {
         this.__location.value = location;
-        this.info_save_btn.classList.remove("blink-button");
+
     }
 }
 
@@ -190,63 +191,99 @@ class Info {
             this.row_remove(tr)
         }));
         // attach an eventhandler on each input of the table so that, when at least on input is changed, the save button begins to blink
-        Info.info_table_tbl.querySelectorAll("input").forEach(e => e.addEventListener("input", () => this.info_save_btn.classList.add("blink-button")));
+        Info.info_table_tbl.querySelectorAll("input").forEach(e => e.addEventListener("input", () => {
+                this.info_save_btn.classList.add("blink-button");
+                data = []
+                const rows = Info.info_table_tbl.querySelectorAll('[data-id]');
+                const date = document.getElementById("info-date").value;
+                for (const row of rows) {
+                    let item = {id: row.dataset.id};
+                    const columns = row.querySelectorAll("[data-field]");
+                    for (const column of columns) {
+                        const field = column.dataset.field;
+                        item[field] = column.value
+                    }
+                    if (item.lesuur > 0) data.push(item);
+                }
+                data.sort((a, b) => a.lesuur - b.lesuur);
+                localStorage.setItem(`${global_data.school}-info-data`, JSON.stringify({info: data, date}));
+
+            }
+        ));
     }
 
-    load = (view_date = null) => {
+    init_date_select = (view_date = null) => {
         const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
-        info_date.innerHTML = "";
+        info_date_select.innerHTML = "";
         let date = new Date();
         for (let dag = 0; dag < 21; dag++) {
             let day_of_week = date.getDay() % 7;
             let date_label = date.toISOString().split("T")[0];
             if (dag === 0 && !view_date) view_date = date_label;
             if (dagen[day_of_week] !== "") {
-                info_date.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date_label})`, date_label, view_date === date_label, view_date === date_label));
+                info_date_select.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date_label})`, date_label, view_date === date_label, view_date === date_label));
                 if (day_of_week === 5) {
                     const option = new Option("-------------------------", null);
                     option.disabled = true;
-                    info_date.add(option);
+                    info_date_select.add(option);
                 }
             }
             date.setDate(date.getDate() + 1);
         }
-        this.date = info_date.value;
+        this.current_date = info_date_select.value;
         // when the date has changed, load en draw a new table
-        info_date.addEventListener("change", async e => {
+        info_date_select.addEventListener("change", async e => {
             e.preventDefault();
             e.stopImmediatePropagation();
             // cannot switch date when current table is not saved yet
             if (this.info_save_btn.classList.contains("blink-button")) {
+                info_date_select.value = this.current_date;
                 await bootbox.alert("Opgepast, je moet eerst bewaren vooraleer een andere datum te kiezen");
-                info_date.value = this.date;
                 return
             }
-            this.date = e.target.value;
-            const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: e.target.value});
-            if (resp_info) {
-                resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
-                // prepare list of this.vervangers
-                if ("vervangers" in resp_info && resp_info.vervangers.length > 0) {
-                    for (const v of resp_info.vervangers) {
-                        if (v.lesuur in this.vervangers)
-                            this.vervangers[v.lesuur].push(v.vervanger);
-                        else
-                            this.vervangers[v.lesuur] = [v.vervanger];
-                    }
-                }
-                // sort and remove double entries in the list of vervangers
-                for (const [l, v] of Object.entries(this.vervangers)) this.vervangers[l] = [...new Set(v.sort())]
-                this.draw(resp_info.data);
-            }
-            const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
-            if (resp_extra.data) {
-                this.extra_info.content_set(resp_extra.data.info);
-                this.extra_info.id_set(resp_extra.data.id);
-                this.extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
-            }
+            //remove local (old) storage
+            localStorage.removeItem(`${global_data.school}-info-data`);
+            this.current_date = e.target.value;
+            await this.load()
         });
-        info_date.dispatchEvent(new Event("change")); // trigger first load
+    }
+
+    load = async () => {
+        // check if data is stored in local storage for current page (school).  If so, use this iso from database.
+        this.local_storage = JSON.parse(localStorage.getItem(`${global_data.school}-info-data`));
+        if (this.local_storage) {
+            this.current_date = this.local_storage.date;
+            info_date_select.value = this.current_date;
+            // if the local storage is not empty, it means the data is not saved yet to the database
+            this.info_save_btn.classList.add("blink-button");
+        }
+
+        const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: this.current_date});
+        if (resp_info) {
+            resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
+            // prepare list of vervangers
+            if ("vervangers" in resp_info && resp_info.vervangers.length > 0) {
+                for (const v of resp_info.vervangers) {
+                    if (v.lesuur in this.vervangers)
+                        this.vervangers[v.lesuur].push(v.vervanger);
+                    else
+                        this.vervangers[v.lesuur] = [v.vervanger];
+                }
+            }
+            // sort and remove double entries in the list of vervangers
+            for (const [l, v] of Object.entries(this.vervangers)) this.vervangers[l] = [...new Set(v.sort())]
+
+            if (this.local_storage)
+                this.draw(this.local_storage.info);
+            else
+                this.draw(resp_info.data);
+        }
+        const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
+        if (resp_extra.data) {
+            this.extra_info.content_set(resp_extra.data.info);
+            this.extra_info.id_set(resp_extra.data.id);
+            this.extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
+        }
     }
 
     save = async () => {
@@ -277,8 +314,8 @@ class Info {
                     info_update.push(item);
                 }
         }
-        if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date.value});
-        if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date.value});
+        if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date_select.value});
+        if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date_select.value});
         if (this.info_delete.length > 0) await fetch_delete("infobord.infobord", {ids: this.info_delete.join(",")});
         const [location, lesuur] = this.extra_info.location_get().split("-");
         const extra_info_data = {lesuur: parseInt(lesuur), location, info: this.extra_info.content_get(), school: global_data.school};
@@ -289,8 +326,8 @@ class Info {
             await fetch_update("infobord.extrainfo", extra_info_data, {school: global_data.school});
         }
         this.info_save_btn.classList.remove("blink-button");
-        // redraw the page if new lines are added or extra-info is used for the first time.  This makes sure the id's are correctly set.
-        this.load(info_date.value);
+        localStorage.removeItem(`${global_data.school}-info-data`);
+        await this.load();
     }
 
     delete = async () => {
@@ -376,10 +413,11 @@ $(document).ready(async function () {
         base_init({button_menu_items});
 
     const info = new Info(document.getElementById("info-save"))
-    info.load();
+    info.init_date_select();
+    await info.load();
 
     document.getElementById("preview").addEventListener("click", () => {
-        window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date.value + "&fontsize=x-large&preview=true", "_blank");
+        window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date_select.value + "&fontsize=x-large&preview=true", "_blank");
     });
 
     if (performance.getEntriesByType('navigation')[0].type === 'navigate') {
