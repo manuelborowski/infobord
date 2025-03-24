@@ -54,7 +54,7 @@ def view():
     view_date = datum if datum else datetime.datetime.now().strftime("%Y-%m-%d")
     infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", view_date)])
     infos = [i.to_dict() for i in infos]
-    extra_info = dl.extra_info.get([("school", "=", school)])
+    extra_info = dl.extra_info.get([("school", "=", school), ("datum", "=", view_date)])
     school_info = dl.settings.get_configuration_setting("school-configuration")[school]
     field_info = dl.settings.get_configuration_setting("field-configuration")
     global_data={"school": school, "info": infos, "lestijden": app.config["LESTIJDEN"], "font_size": font_size, "width": width, "preview": preview,
@@ -65,8 +65,9 @@ def view():
 @login_required
 def extrainfo():
     school = request.args.get("school")
+    datum = request.args.get("datum")
     if request.method in ["GET"]:
-        extra_info = dl.extra_info.get([("school", "=", school)])
+        extra_info = dl.extra_info.get([("school", "=", school), ("datum", "=", datum)])
         return {"data": extra_info.to_dict() if extra_info else None}
     if request.method == "POST":
         data = json.loads(request.data)

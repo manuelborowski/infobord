@@ -9,7 +9,7 @@ const school2color = {
 const __draw_table = () => {
     let __info_injected = false;
     const __inject_extra_info = () => {
-        if (global_data.extra_info && global_data.extra_info.location === "lesuur") {
+        if (global_data.extra_info && ["lesuur", "top"].includes(global_data.extra_info.location)) {
             const tr = document.createElement("tr");
             table.appendChild(tr);
             const td = document.createElement("td");
@@ -61,6 +61,7 @@ const __draw_table = () => {
     let lesuur = "";
     for (const item of global_data.info) {
         if (global_data.extra_info && global_data.extra_info.location === "lesuur" && global_data.extra_info.lesuur <= item.lesuur && !__info_injected) __inject_extra_info()
+        if (global_data.extra_info && global_data.extra_info.location === "top" && !__info_injected) __inject_extra_info()
         if (item.lesuur < view_minimum_lesuur) continue;
         item.lesuur = `${item.lesuur}: ${global_data.lestijden[item.lesuur]}`
         if (item.lesuur !== lesuur)

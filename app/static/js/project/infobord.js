@@ -27,6 +27,7 @@ class ExtraInfo {
     static location_options = [
         {value: "none-0", label: "Niet"},
         {value: "left-0", label: "Links"},
+        {value: "top-0", label: "Bovenaan"},
         {value: "lesuur-1", label: "In lesuur 1"},
         {value: "lesuur-2", label: "In lesuur 2"},
         {value: "lesuur-3", label: "In lesuur 3"},
@@ -278,11 +279,15 @@ class Info {
             else
                 this.draw(resp_info.data);
         }
-        const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school});
+        const resp_extra = await fetch_get("infobord.extrainfo", {school: global_data.school, datum: this.current_date});
         if (resp_extra.data) {
             this.extra_info.content_set(resp_extra.data.info);
             this.extra_info.id_set(resp_extra.data.id);
             this.extra_info.location_set(resp_extra.data.location + "-" + resp_extra.data.lesuur.toString());
+        } else {
+            this.extra_info.content_set("");
+            this.extra_info.id_set(-1);
+            this.extra_info.location_set("none-0");
         }
     }
 
@@ -318,7 +323,7 @@ class Info {
         if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date_select.value});
         if (this.info_delete.length > 0) await fetch_delete("infobord.infobord", {ids: this.info_delete.join(",")});
         const [location, lesuur] = this.extra_info.location_get().split("-");
-        const extra_info_data = {lesuur: parseInt(lesuur), location, info: this.extra_info.content_get(), school: global_data.school};
+        const extra_info_data = {lesuur: parseInt(lesuur), location, info: this.extra_info.content_get(), school: global_data.school, datum: `${date}`};
         if (this.extra_info.id_get() === "-1") {
             await fetch_post("infobord.extrainfo", extra_info_data, {school: global_data.school});
         } else {

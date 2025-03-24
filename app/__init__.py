@@ -39,8 +39,9 @@ from functools import wraps
 # 0.23: cannot change date when current table is not saved.
 # 0.24: local storage, stored when an input changes (and save buttons starts to blink), cleared when saved to database or other date selected and loaded when page is loaded.
 # It is not possible to switch date when current table is not saved.
+# 0.25: extra-info, added date field and can be placed at top
 
-version = "0.24"
+version = "0.25"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
