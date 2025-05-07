@@ -30,7 +30,7 @@ def infobord():
             date = datetime.datetime.strptime(datum, "%Y-%m-%d") - datetime.timedelta(days= 7 * i)
             week_old_infos += dl.infobord.get_m([("school", "=", school), ("datum", "=", date.strftime("%Y-%m-%d"))])
         week_old_infos = [i.to_dict() for i in week_old_infos]
-        infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", datum)])
+        infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", datum)], order_by=["lesuur", "klas"])
         infos = [i.to_dict() for i in infos]
         return {"data": infos, "vervangers": week_old_infos}
     if request.method == "POST":
@@ -52,7 +52,7 @@ def view():
     width = request.args.get("width")
     preview = request.args.get("preview") == "true"
     view_date = datum if datum else datetime.datetime.now().strftime("%Y-%m-%d")
-    infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", view_date)])
+    infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", view_date)], order_by=["lesuur", "klas"])
     infos = [i.to_dict() for i in infos]
     extra_info = dl.extra_info.get([("school", "=", school), ("datum", "=", view_date)])
     school_info = dl.settings.get_configuration_setting("school-configuration")[school]

@@ -132,10 +132,12 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
                 else:
                     q = q.filter(getattr(model, k) == v)
         if order_by:
-            if order_by[0] == '-':
-                q = q.order_by(desc(getattr(model, order_by[1::])))
-            else:
-                q = q.order_by(getattr(model, order_by))
+            if type(order_by) is not list: order_by = [order_by]
+            for ob in order_by:
+                if ob[0] == '-':
+                    q = q.order_by(desc(getattr(model, ob[1::])))
+                else:
+                    q = q.order_by(getattr(model, ob))
         else:
             q = q.order_by(getattr(model, "id"))
         if active is not None and hasattr(model, "active"):

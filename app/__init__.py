@@ -41,8 +41,9 @@ from functools import wraps
 # It is not possible to switch date when current table is not saved.
 # 0.25: extra-info, added date field and can be placed at top
 # 0.26: navigate in table with arrow keys
+# 0.27: queue to 35 days.  Order on lesuur/klas
 
-version = "0.26"
+version = "0.27"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

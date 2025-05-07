@@ -217,7 +217,7 @@ class Info {
         const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
         info_date_select.innerHTML = "";
         let date = new Date();
-        for (let dag = 0; dag < 21; dag++) {
+        for (let dag = 0; dag < 35; dag++) {
             let day_of_week = date.getDay() % 7;
             let date_label = date.toISOString().split("T")[0];
             if (dag === 0 && !view_date) view_date = date_label;
@@ -369,7 +369,11 @@ class Info {
             }
             if (item.lesuur > 0) data.push(item);
         }
-        data.sort((a, b) => a.lesuur - b.lesuur);
+        data.sort((a, b) => a.lesuur - b.lesuur); // sort on lesuur
+        data.sort((a, b) => {
+            if ((a.lesuur - b.lesuur) !== 0) return 0; // (sub)sort on klas
+            return a.klas < b.klas ? -1 : 1
+        })
         this.draw(data)
     }
 
@@ -429,6 +433,7 @@ $(document).ready(async function () {
         console.log("voor de eerste keer bezocht")
     }
 
+    // Use arrow keys to navigate through the table.
     document.addEventListener('keydown', (event) => {
         const current_td = document.activeElement.parentNode;
         const current_tr = current_td.parentNode;
