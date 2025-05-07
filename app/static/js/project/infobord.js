@@ -428,5 +428,37 @@ $(document).ready(async function () {
     if (performance.getEntriesByType('navigation')[0].type === 'navigate') {
         console.log("voor de eerste keer bezocht")
     }
+
+    document.addEventListener('keydown', (event) => {
+        const current_td = document.activeElement.parentNode;
+        const current_tr = current_td.parentNode;
+        const index = Array.from(current_tr.children).indexOf(current_td);
+
+        switch (event.key) {
+            case "ArrowLeft":
+                // Left pressed
+                const input_left = current_td.previousElementSibling.getElementsByTagName('input')[0];
+                if (input_left) input_left.focus();
+                break;
+            case "ArrowRight":
+                // Right pressed
+                const input_rigth = current_td.nextElementSibling.getElementsByTagName('input')[0];
+                if (input_rigth) input_rigth.focus();
+                break;
+            case "ArrowUp":
+                // Up pressed
+                const input_up = Array.from(current_tr.previousElementSibling.children)[index].getElementsByTagName('input')[0];
+                if (input_up) input_up.focus();
+                break;
+            case "ArrowDown":
+                // Down pressed
+                const row_down = current_tr.nextElementSibling;
+                if (row_down) {
+                    const input_down = Array.from(row_down.children)[index].getElementsByTagName('input')[0];
+                    if (input_down) input_down.focus();
+                }
+                break;
+        }
+    })
 });
 
