@@ -98,7 +98,7 @@ class Info {
             const tr = document.createElement("tr");
             table.appendChild(tr);
             tr.dataset["id"] = item.id;
-                for (const field of meta.school_info.fields) {
+            for (const field of meta.school_info.fields) {
                 const column = meta.field_info[field];
                 const td = document.createElement("td");
                 tr.appendChild(td);
@@ -398,30 +398,32 @@ const __init_arrow_keys = () => {
         const current_tr = current_td.parentNode;
         const index = Array.from(current_tr.children).indexOf(current_td);
 
-        switch (event.key) {
-            case "ArrowLeft":
-                // Left pressed
-                const input_left = current_td.previousElementSibling.getElementsByTagName('input')[0];
-                if (input_left) input_left.focus();
-                break;
-            case "ArrowRight":
-                // Right pressed
-                const input_rigth = current_td.nextElementSibling.getElementsByTagName('input')[0];
-                if (input_rigth) input_rigth.focus();
-                break;
-            case "ArrowUp":
-                // Up pressed
-                const input_up = Array.from(current_tr.previousElementSibling.children)[index].getElementsByTagName('input')[0];
-                if (input_up) input_up.focus();
-                break;
-            case "ArrowDown":
-                // Down pressed
-                const row_down = current_tr.nextElementSibling;
-                if (row_down) {
-                    const input_down = Array.from(row_down.children)[index].getElementsByTagName('input')[0];
-                    if (input_down) input_down.focus();
-                }
-                break;
+        if (event.ctrlKey) {
+            switch (event.key) {
+                case "ArrowLeft":
+                    // Left pressed
+                    const input_left = current_td.previousElementSibling.getElementsByTagName('input')[0];
+                    if (input_left) input_left.focus();
+                    break;
+                case "ArrowRight":
+                    // Right pressed
+                    const input_rigth = current_td.nextElementSibling.getElementsByTagName('input')[0];
+                    if (input_rigth) input_rigth.focus();
+                    break;
+                case "ArrowUp":
+                    // Up pressed
+                    const input_up = Array.from(current_tr.previousElementSibling.children)[index].getElementsByTagName('input')[0];
+                    if (input_up) input_up.focus();
+                    break;
+                case "ArrowDown":
+                    // Down pressed
+                    const row_down = current_tr.nextElementSibling;
+                    if (row_down) {
+                        const input_down = Array.from(row_down.children)[index].getElementsByTagName('input')[0];
+                        if (input_down) input_down.focus();
+                    }
+                    break;
+            }
         }
     })
 
@@ -438,7 +440,7 @@ const __init_shortcut = () => {
             const value = document.activeElement.value;
             if (value.toUpperCase() in staff_cache) {
                 const staff = staff_cache[value.toUpperCase()];
-                document.activeElement.value = `${staff.voornaam[0]}. ${staff.naam}`;
+                // document.activeElement.value = `${staff.voornaam[0]}. ${staff.naam}`;
             }
         }
     });
