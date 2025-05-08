@@ -43,8 +43,9 @@ from functools import wraps
 # 0.26: navigate in table with arrow keys
 # 0.27: queue to 35 days.  Order on lesuur/klas
 # 0.28: added staff
+# 0.29: reworked settings to get lost of formio
 
-version = "0.28"
+version = "0.29"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
