@@ -14,10 +14,8 @@ class Staff(db.Model, SerializerMixin):
 
     date_format = '%Y-%m-%d'
     datetime_format = '%Y-%m-%d %H:%M'
-    serialize_rules = ("is_interim_to_text", "is_wisa_to_text",)
 
     id = db.Column(db.Integer(), primary_key=True)
-
     voornaam = db.Column(db.String(256), default='')
     naam = db.Column(db.String(256), default='')
     code = db.Column(db.String(256), default='')
@@ -37,32 +35,32 @@ def commit():
     return app.data.models.commit()
 
 
-def staff_add(data = {}, commit=True):
+def add(data = {}, commit=True):
     staff = app.data.models.add_single(Staff, data, commit)
     return staff
 
 
-def staff_add_m(data = []):
+def add_m(data = []):
     return app.data.models.add_multiple(Staff, data, timestamp=True)
 
 
-def staff_update(staff, data={}, commit=True):
+def update(staff, data={}, commit=True):
     return app.data.models.update_single(Staff, staff, data, commit)
 
 
-def staff_delete_m(ids=[], staffs=[]):
+def delete_m(ids=[], staffs=[]):
     return app.data.models.delete_multiple(Staff, ids, staffs)
 
 
-def staff_get_m(filters=[], fields=[], order_by=None, first=False, count=False, active=True):
+def get_m(filters=[], fields=[], order_by=None, first=False, count=False, active=True):
     return app.data.models.get_multiple(Staff, filters=filters, fields=fields, order_by=order_by, first=first, count=count, active=active)
 
 
-def staff_get(filters=[]):
+def get(filters=[]):
     return app.data.models.get_first_single(Staff, filters)
 
 
-def staff_update_m(data = [], overwrite=False):
+def update_m(data = [], overwrite=False):
     return app.data.models.update_multiple(Staff, data, timestamp=True)
 
 

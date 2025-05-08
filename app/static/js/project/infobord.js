@@ -1,6 +1,8 @@
 import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post, fetch_update} from "../common/common.js";
 
+let meta = await fetch_get("infobord.meta", {school: global_data.school});
+let info = null;
 const info_date_select = document.getElementById("info-date");
 
 class ExtraInfo {
@@ -96,8 +98,8 @@ class Info {
             const tr = document.createElement("tr");
             table.appendChild(tr);
             tr.dataset["id"] = item.id;
-            for (const field of global_data.school_info.fields) {
-                const column = global_data.field_info[field];
+                for (const field of meta.school_info.fields) {
+                const column = meta.field_info[field];
                 const td = document.createElement("td");
                 tr.appendChild(td);
                 const type = "type" in column ? column.type : "string";
@@ -158,8 +160,8 @@ class Info {
             Info.info_table_tbl.appendChild(table);
             const tr = document.createElement("tr");
             table.appendChild(tr);
-            for (const field of global_data.school_info.fields) {
-                const column = global_data.field_info[field];
+            for (const field of meta.school_info.fields) {
+                const column = meta.field_info[field];
                 const th = document.createElement("th");
                 tr.appendChild(th);
                 th.innerHTML = column.label;
@@ -168,7 +170,7 @@ class Info {
         if (data.length > 0) { // use items from database
             for (const item of data) __draw_row(item)
         } else { // empty table
-            const dummy_item = Object.fromEntries(global_data.school_info.fields.map(i => [i, ""]));
+            const dummy_item = Object.fromEntries(meta.school_info.fields.map(i => [i, ""]));
             for (let i = 0; i < nbr_rows; i++) {
                 dummy_item.id = -1;
                 dummy_item.staff = current_user.username;
@@ -179,8 +181,8 @@ class Info {
         const rows = Array.from(table.querySelectorAll("tr"));
         rows.shift(); // drop header
         for (const row of rows) {
-            for (const field of global_data.school_info.fields) {
-                const column = global_data.field_info[field];
+            for (const field of meta.school_info.fields) {
+                const column = meta.field_info[field];
                 if (column.source === "data" && "cb" in column) {
                     row.querySelector(`td [data-field=${field}]`).dispatchEvent(new Event("input"));
                 }
@@ -304,7 +306,7 @@ class Info {
                 if (column.dataset.type === "int" && column.value !== "") {
                     const value = parseInt(column.value);
                     if (isNaN(value)) {
-                        bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
+                        bootbox.alert(`Opgepast, in kolom "${meta.field_info[column.dataset.field].label}" mag alleen een getal staan`)
                         return
                     }
                     item[field] = value;
@@ -360,7 +362,7 @@ class Info {
                     column.value = column.value === "" ? 0 : column.value;
                     const value = parseInt(column.value);
                     if (isNaN(value)) {
-                        bootbox.alert(`Opgepast, in kolom "${global_data.field_info[column.dataset.field].label}" mag alleen een getal staan`)
+                        bootbox.alert(`Opgepast, in kolom "${meta.field_info[column.dataset.field].label}" mag alleen een getal staan`)
                         return
                     }
                     item[field] = value;
@@ -389,51 +391,8 @@ class Info {
 
 }
 
-$(document).ready(async function () {
-    const button_menu_items = [
-        {
-            type: 'button',
-            id: 'info-save',
-            label: 'Bewaar',
-            cb: () => info.save()
-        },
-        {
-            type: 'button',
-            id: 'info-sort',
-            label: 'Sorteer',
-            cb: () => info.sort()
-        },
-        {
-            type: 'button',
-            id: 'info-delete',
-            label: 'Leegmaken',
-            cb: () => info.delete()
-        },
-        {
-            type: 'button',
-            id: 'info-add',
-            label: '+5 rijen',
-            cb: () => info.row_add(5)
-        },
-    ]
-    if (current_user.level < 3)
-        base_init({});
-    else
-        base_init({button_menu_items});
-
-    const info = new Info(document.getElementById("info-save"))
-    info.init_date_select();
-    await info.load();
-
-    document.getElementById("preview").addEventListener("click", () => {
-        window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date_select.value + "&fontsize=x-large&preview=true", "_blank");
-    });
-
-    if (performance.getEntriesByType('navigation')[0].type === 'navigate') {
-        console.log("voor de eerste keer bezocht")
-    }
-
-    // Use arrow keys to navigate through the table.
+// Use arrow keys to navigate through the table.
+const __init_arrow_keys = () => {
     document.addEventListener('keydown', (event) => {
         const current_td = document.activeElement.parentNode;
         const current_tr = current_td.parentNode;
@@ -465,5 +424,71 @@ $(document).ready(async function () {
                 break;
         }
     })
+
+}
+
+const __init_shortcut = () => {
+    const staff_cache = Object.fromEntries(meta.staff.map(s => [s.code, s]))
+    document.addEventListener('keyup', (event) => {
+        const current_td = document.activeElement.parentNode;
+        const current_tr = current_td.parentNode;
+        const index = Array.from(current_tr.children).indexOf(current_td);
+        // consider the 3rd column only (Te vervangen)
+        if (index === 2) {
+            const value = document.activeElement.value;
+            if (value.toUpperCase() in staff_cache) {
+                const staff = staff_cache[value.toUpperCase()];
+                document.activeElement.value = `${staff.voornaam[0]}. ${staff.naam}`;
+            }
+        }
+    });
+}
+
+const button_menu_items = [
+    {
+        type: 'button',
+        id: 'info-save',
+        label: 'Bewaar',
+        cb: () => info.save()
+    },
+    {
+        type: 'button',
+        id: 'info-sort',
+        label: 'Sorteer',
+        cb: () => info.sort()
+    },
+    {
+        type: 'button',
+        id: 'info-delete',
+        label: 'Leegmaken',
+        cb: () => info.delete()
+    },
+    {
+        type: 'button',
+        id: 'info-add',
+        label: '+5 rijen',
+        cb: () => info.row_add(5)
+    },
+]
+
+$(document).ready(async function () {
+    if (current_user.level < 3)
+        base_init({});
+    else
+        base_init({button_menu_items});
+
+    info = new Info(document.getElementById("info-save"))
+    info.init_date_select();
+    await info.load();
+
+    document.getElementById("preview").addEventListener("click", () => {
+        window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date_select.value + "&fontsize=x-large&preview=true", "_blank");
+    });
+
+    if (performance.getEntriesByType('navigation')[0].type === 'navigate') {
+        console.log("voor de eerste keer bezocht")
+    }
+    __init_arrow_keys();
+    __init_shortcut();
 });
 

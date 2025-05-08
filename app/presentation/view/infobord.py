@@ -15,9 +15,7 @@ bp_infobord = Blueprint('infobord', __name__)
 @login_required
 def edit():
     school = request.args.get("school")
-    school_info = dl.settings.get_configuration_setting("school-configuration")[school]
-    field_info = dl.settings.get_configuration_setting("field-configuration")
-    return render_template("infobord.html", global_data={"school": school, "school_info": school_info, "field_info": field_info})
+    return render_template("infobord.html", global_data={"school": school})
 
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE", "UPDATE"])
 @login_required
@@ -82,4 +80,17 @@ def extrainfoview():
     school = request.args.get("school")
     extra_info = dl.extra_info.get([("school", "=", school)])
     return render_template("infobord_view_extra.html", extra_info=extra_info.to_dict() if extra_info else None)
+
+@bp_infobord.route('/infobord/meta', methods=['GET'])
+def meta():
+    school = request.args.get("school")
+    school_info = dl.settings.get_configuration_setting("school-configuration")[school]
+    field_info = dl.settings.get_configuration_setting("field-configuration")
+    staff = dl.staff.get_m()
+    staff = [s.to_dict() for s in staff]
+    return json.dumps({
+        "school_info": school_info,
+        "field_info": field_info,
+        "staff": staff,
+    })
 

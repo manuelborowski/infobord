@@ -6,6 +6,7 @@ import app.data.settings
 import app.data.datatables
 import app.data.infobord
 import app.data.extra_info
+import app.data.staff
 
 from app import login_manager
 @login_manager.user_loader

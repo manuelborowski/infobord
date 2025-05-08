@@ -44,8 +44,9 @@ from functools import wraps
 # 0.27: queue to 35 days.  Order on lesuur/klas
 # 0.28: added staff
 # 0.29: reworked settings to get lost of formio
+# 0.30: in table, column "Te vervangen", if a staff code is typed, it is replaced by the staff name
 
-version = "0.29"
+version = "0.30"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
