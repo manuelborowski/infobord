@@ -42,8 +42,9 @@ from functools import wraps
 # 0.25: extra-info, added date field and can be placed at top
 # 0.26: navigate in table with arrow keys
 # 0.27: queue to 35 days.  Order on lesuur/klas
+# 0.28: added staff
 
-version = "0.27"
+version = "0.28"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

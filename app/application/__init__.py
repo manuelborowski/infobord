@@ -1,4 +1,4 @@
-__all__ = ["user", "datatables", "common", "settings", "cron", "socketio", "formio"]
+__all__ = ["user", "datatables", "common", "settings", "cron", "socketio", "formio", "staff"]
 
 import app.application.user
 import app.application.datatables

@@ -1,4 +1,4 @@
-__all__ = ["user", "models", "settings", "datatables", "infobord", "extra_info"]
+__all__ = ["user", "models", "settings", "datatables", "infobord", "extra_info", "staff"]
 
 import app.data.user
 import app.data.models
