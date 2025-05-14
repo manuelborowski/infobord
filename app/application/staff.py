@@ -21,7 +21,7 @@ def staff_load_from_sdh(opaque=None, **kwargs):
         if res.status_code == 200:
             sdh_staffs = res.json()
             if sdh_staffs['status']:
-                db_staffs = dl.staff.staff_get_m()
+                db_staffs = dl.staff.get_m()
                 db_code2staff = {s.code: s for s in db_staffs} if db_staffs else {}
                 for staff in sdh_staffs["data"]:
                     update = {}
@@ -48,9 +48,9 @@ def staff_load_from_sdh(opaque=None, **kwargs):
                 for staff in db_code2staff.values():
                     deleted_staff.append(staff)
                 log.info(f'{sys._getframe().f_code.co_name}, new/updated/deleted {len(new_staff)}/{len(updated_staff)}/{len(deleted_staff)} staff')
-                dl.staff.staff_update_m(updated_staff)
-                dl.staff.staff_add_m(new_staff)
-                dl.staff.staff_delete_m(staffs=deleted_staff)
+                dl.staff.update_m(updated_staff)
+                dl.staff.add_m(new_staff)
+                dl.staff.delete_m(staffs=deleted_staff)
             else:
                 log.info(f'{sys._getframe().f_code.co_name}, error retrieving staff from SDH, {sdh_staffs["data"]}')
         else:
