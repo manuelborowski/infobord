@@ -48,8 +48,9 @@ from functools import wraps
 # 0.31: navigate with ctrl + arrow key
 # 0.32: import schoolschedule.  When typing a staff code, use the schoolschedule to fetch the associated classes and classrooms.  Add option to overwrite and save a staff name with a nickname (roepnaam)
 # 0.33: local storage, ignore when date is too old
+# 0.34: info table, use columnname to get the columnindex to update a cell
 
-version = "0.33"
+version = "0.34"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

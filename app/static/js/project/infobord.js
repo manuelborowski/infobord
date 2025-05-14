@@ -395,6 +395,10 @@ class Info {
         this.info_save_btn.classList.add("blink-button");
     }
 
+    column_index = name => {
+        return meta.school_info.fields.indexOf(name);
+    }
+
 }
 
 // Use arrow keys to navigate through the table.
@@ -435,6 +439,7 @@ const __init_arrow_keys = () => {
 
 }
 
+// Type a staff code and press enter.  Relevant info (full name, schedule info) is fetched and fields in the row are populated.
 let staff_cache = {};
 const __init_shortcut = () => {
     staff_cache = Object.fromEntries(meta.staff.map(s => [s.code, s]))
@@ -443,7 +448,7 @@ const __init_shortcut = () => {
         const current_tr = current_td.parentNode;
         const index = Array.from(current_tr.children).indexOf(current_td);
         // consider the 3rd column only (Te vervangen)
-        if (index === 2) {
+        if (index === info.column_index("leerkracht")) {
             const value = document.activeElement.value;
             if (event.code === "Enter" && value.toUpperCase() in staff_cache) {
                 const code = value.toUpperCase();
@@ -467,8 +472,11 @@ const __init_shortcut = () => {
                             else
                                 klascode = [...new Set(klascodes.map(k => k.substring(0, 2)))].join(", ");
                         }
-                    current_tr.children[5].firstChild.value = lokaal;
-                    current_tr.children[3].firstChild.value = klascode;
+                    if (global_data.school === "sum")
+                        current_tr.children[info.column_index("stamlokaal")].firstChild.value = lokaal;
+                    else
+                        current_tr.children[info.column_index("locatie")].firstChild.value = lokaal;
+                    current_tr.children[info.column_index("klas")].firstChild.value = klascode;
                 }
                 current_tr.dataset["code"] = code
             }
