@@ -50,8 +50,9 @@ from functools import wraps
 # 0.33: local storage, ignore when date is too old
 # 0.34: info table, use columnname to get the columnindex to update a cell
 # 0.35: school_info, added use_schedule boolean to indicate the schedule is to be used or not
+# 0.36: from the schedule, fetch vervangers (standby) and prepend them in the list of vervanger-options
 
-version = "0.35"
+version = "0.36"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

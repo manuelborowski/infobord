@@ -129,8 +129,8 @@ class Info {
             const select = e.target.closest("tr").querySelector("[data-type=vervanger]");
             if (e.target.value in this.vervangers) {
                 select.innerHTML = "";
-                select.add(new Option("", "", true, true));
                 this.vervangers[e.target.value].forEach(i => select.add(new Option(i, i)));
+                select.value = "";
                 select.hidden = false;
             } else {
                 select.hidden = true;
@@ -399,6 +399,12 @@ class Info {
         return meta.school_info.fields.indexOf(name);
     }
 
+    prepend_vervanger_options = (row, options) => {
+        const select = row.querySelector("[data-type=vervanger]");
+        options.forEach(i => select.prepend(new Option(i, i)));
+        select.value = "";
+    }
+
 }
 
 // Use arrow keys to navigate through the table.
@@ -457,7 +463,8 @@ const __init_shortcut = () => {
                 if (meta.school_info.use_schedule) {
                     const lesuur = current_tr.children[1].firstChild.value;
                     const day = new Date(document.getElementById("info-date").value).getDay();
-                    const schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},leerkracht$=$${code}`});
+                    // Try to fill the klascode and lokaal fields
+                    let schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},leerkracht$=$${code}`});
                     if (schedules.length > 0) {
                         let klascode = "";
                         let lokaal = [...new Set(schedules.map(s => s.lokaal))].join(", ");
@@ -479,6 +486,19 @@ const __init_shortcut = () => {
                             current_tr.children[info.column_index("locatie")].firstChild.value = lokaal;
                         current_tr.children[info.column_index("klas")].firstChild.value = klascode;
                     }
+                    // Try to fetch vervangers (standby) from the schedule and prepend them in the option-list of vervangers
+                    let standby = [];
+                    for (const standby_code of meta.school_info.standby_code) {
+                        schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},vak$=$${standby_code}`});
+                        for (const schedule of schedules) {
+                            const staff = staff_cache[schedule.leerkracht];
+                            const name = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
+                            standby.push(`(${standby_code}) ${name}`)
+                        }
+                    }
+                    console.log(standby)
+                    info.prepend_vervanger_options(current_tr, standby);
+
                 }
                 current_tr.dataset["code"] = code
             }
