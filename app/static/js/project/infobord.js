@@ -454,29 +454,31 @@ const __init_shortcut = () => {
                 const code = value.toUpperCase();
                 const staff = staff_cache[code];
                 document.activeElement.value = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
-                const lesuur = current_tr.children[1].firstChild.value;
-                const day = new Date(document.getElementById("info-date").value).getDay();
-                const schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},leerkracht$=$${code}`});
-                if (schedules.length > 0) {
-                    let klascode = "";
-                    let lokaal = [...new Set(schedules.map(s => s.lokaal))].join(", ");
-                    if (global_data.school === "sum") klascode = schedules[0].klascode.substring(0, 2);
-                    else if (global_data.school === "sui") klascode = [...new Set(schedules.map(s => s.klascode))].join(", ");
-                    else if (global_data.school === "sul")
-                        if (schedules.length === 1) {
-                            klascode = schedules[0].klascode;
-                        } else {
-                            const klascodes = [...new Set(schedules.map(s => s.klascode))];
-                            if (klascodes.length === 1)
-                                klascode = klascodes[0]
-                            else
-                                klascode = [...new Set(klascodes.map(k => k.substring(0, 2)))].join(", ");
-                        }
-                    if (global_data.school === "sum")
-                        current_tr.children[info.column_index("stamlokaal")].firstChild.value = lokaal;
-                    else
-                        current_tr.children[info.column_index("locatie")].firstChild.value = lokaal;
-                    current_tr.children[info.column_index("klas")].firstChild.value = klascode;
+                if (meta.school_info.use_schedule) {
+                    const lesuur = current_tr.children[1].firstChild.value;
+                    const day = new Date(document.getElementById("info-date").value).getDay();
+                    const schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},leerkracht$=$${code}`});
+                    if (schedules.length > 0) {
+                        let klascode = "";
+                        let lokaal = [...new Set(schedules.map(s => s.lokaal))].join(", ");
+                        if (global_data.school === "sum") klascode = schedules[0].klascode.substring(0, 2);
+                        else if (global_data.school === "sui") klascode = [...new Set(schedules.map(s => s.klascode))].join(", ");
+                        else if (global_data.school === "sul")
+                            if (schedules.length === 1) {
+                                klascode = schedules[0].klascode;
+                            } else {
+                                const klascodes = [...new Set(schedules.map(s => s.klascode))];
+                                if (klascodes.length === 1)
+                                    klascode = klascodes[0]
+                                else
+                                    klascode = [...new Set(klascodes.map(k => k.substring(0, 2)))].join(", ");
+                            }
+                        if (global_data.school === "sum")
+                            current_tr.children[info.column_index("stamlokaal")].firstChild.value = lokaal;
+                        else
+                            current_tr.children[info.column_index("locatie")].firstChild.value = lokaal;
+                        current_tr.children[info.column_index("klas")].firstChild.value = klascode;
+                    }
                 }
                 current_tr.dataset["code"] = code
             }
