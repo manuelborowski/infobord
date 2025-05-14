@@ -257,10 +257,14 @@ class Info {
         // check if data is stored in local storage for current page (school).  If so, use this iso from database.
         this.local_storage = JSON.parse(localStorage.getItem(`${global_data.school}-info-data`));
         if (this.local_storage) {
-            this.current_date = this.local_storage.date;
-            info_date_select.value = this.current_date;
-            // if the local storage is not empty, it means the data is not saved yet to the database
-            this.info_save_btn.classList.add("blink-button");
+            if (new Date(this.local_storage.date) >= new Date(new Date().setHours(0, 0, 0, 0))) {
+                this.current_date = this.local_storage.date;
+                info_date_select.value = this.current_date;
+                // if the local storage is not empty, it means the data is not saved yet to the database
+                this.info_save_btn.classList.add("blink-button");
+            } else {
+                this.local_storage = null;
+            }
         }
 
         const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: this.current_date});
