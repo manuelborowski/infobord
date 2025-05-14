@@ -1,5 +1,6 @@
 import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post, fetch_update} from "../common/common.js";
+import {ContextMenu} from "../common/context_menu.js";
 
 let meta = await fetch_get("infobord.meta", {school: global_data.school});
 let info = null;
@@ -90,6 +91,7 @@ class Info {
         this.info_save_btn = info_save_btn;
         this.info_delete = [];
         this.extra_info = new ExtraInfo(info_save_btn);
+        this.id_ctr = -1;
     }
 
     draw = (data = [], nbr_rows = 20, add_to_table = false) => {
@@ -121,7 +123,6 @@ class Info {
                     if ("cb" in column && column.cb in string2cb) input.addEventListener("input", string2cb[column.cb]);
                 }
             }
-
         }
 
         const __lesuur_changed = e => {
@@ -172,7 +173,8 @@ class Info {
         } else { // empty table
             const dummy_item = Object.fromEntries(meta.school_info.fields.map(i => [i, ""]));
             for (let i = 0; i < nbr_rows; i++) {
-                dummy_item.id = -1;
+                dummy_item.id = this.id_ctr;
+                this.id_ctr--;
                 dummy_item.staff = current_user.username;
                 __draw_row(dummy_item)
             }
@@ -314,7 +316,7 @@ class Info {
                     item[field] = column.value
             }
             if (item.lesuur > 0)
-                if (row.dataset.id === "-1") {
+                if (row.dataset.id <= -1) {
                     info_add.push(item);
                 } else {
                     item.id = row.dataset.id;
@@ -429,18 +431,42 @@ const __init_arrow_keys = () => {
 
 }
 
+let staff_cache = {};
 const __init_shortcut = () => {
-    const staff_cache = Object.fromEntries(meta.staff.map(s => [s.code, s]))
-    document.addEventListener('keyup', (event) => {
+    staff_cache = Object.fromEntries(meta.staff.map(s => [s.code, s]))
+    document.addEventListener('keyup', async event => {
         const current_td = document.activeElement.parentNode;
         const current_tr = current_td.parentNode;
         const index = Array.from(current_tr.children).indexOf(current_td);
         // consider the 3rd column only (Te vervangen)
         if (index === 2) {
             const value = document.activeElement.value;
-            if (value.toUpperCase() in staff_cache) {
-                const staff = staff_cache[value.toUpperCase()];
-                // document.activeElement.value = `${staff.voornaam[0]}. ${staff.naam}`;
+            if (event.code === "Enter" && value.toUpperCase() in staff_cache) {
+                const code = value.toUpperCase();
+                const staff = staff_cache[code];
+                document.activeElement.value = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
+                const lesuur = current_tr.children[1].firstChild.value;
+                const day = new Date(document.getElementById("info-date").value).getDay();
+                const schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},leerkracht$=$${code}`});
+                if (schedules.length > 0) {
+                    let klascode = "";
+                    let lokaal = [...new Set(schedules.map(s => s.lokaal))].join(", ");
+                    if (global_data.school === "sum") klascode = schedules[0].klascode.substring(0, 2);
+                    else if (global_data.school === "sui") klascode = [...new Set(schedules.map(s => s.klascode))].join(", ");
+                    else if (global_data.school === "sul")
+                        if (schedules.length === 1) {
+                            klascode = schedules[0].klascode;
+                        } else {
+                            const klascodes = [...new Set(schedules.map(s => s.klascode))];
+                            if (klascodes.length === 1)
+                                klascode = klascodes[0]
+                            else
+                                klascode = [...new Set(klascodes.map(k => k.substring(0, 2)))].join(", ");
+                        }
+                    current_tr.children[5].firstChild.value = lokaal;
+                    current_tr.children[3].firstChild.value = klascode;
+                }
+                current_tr.dataset["code"] = code
             }
         }
     });
@@ -473,6 +499,23 @@ const button_menu_items = [
     },
 ]
 
+const __save_roepnaam = async (ids) => {
+    const id = ids[0];
+    const row = document.querySelector(`tr[data-id='${id}']`);
+    const code = row.dataset.code;
+    const roepnaam = row.children[2].firstChild.value;
+    staff_cache[code].roepnaam = roepnaam;
+    await fetch_update("infobord.staff", {id: staff_cache[code].id, roepnaam})
+}
+
+const __get_row_id = (event) => {
+    return [event.target.parentNode.parentNode.dataset.id];
+}
+
+const context_menu_items = [
+    {type: "item", label: 'Roepnaam bewaren', iconscout: 'plus-circle', cb: __save_roepnaam},
+]
+
 $(document).ready(async function () {
     if (current_user.level < 3)
         base_init({});
@@ -492,5 +535,8 @@ $(document).ready(async function () {
     }
     __init_arrow_keys();
     __init_shortcut();
+
+    const context_menu = new ContextMenu(document.getElementById("info-table"), context_menu_items);
+    context_menu.subscribe_get_ids(__get_row_id);
 });
 

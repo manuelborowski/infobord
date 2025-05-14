@@ -46,8 +46,9 @@ from functools import wraps
 # 0.29: reworked settings to get lost of formio
 # 0.30: in table, column "Te vervangen", if a staff code is typed, it is replaced by the staff name
 # 0.31: navigate with ctrl + arrow key
+# 0.32: import schoolschedule.  When typing a staff code, use the schoolschedule to fetch the associated classes and classrooms.  Add option to overwrite and save a staff name with a nickname (roepnaam)
 
-version = "0.31"
+version = "0.32"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

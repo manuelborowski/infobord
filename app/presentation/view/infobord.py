@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from app import data as dl
+from app import data as dl, application as al
 import json, datetime
 
 # logging on file level
@@ -40,6 +40,14 @@ def infobord():
     if request.method == "DELETE":
         data = request.args.get("ids").split(",")
         dl.infobord.delete_m(ids=data)
+    return {}
+
+@bp_infobord.route('/staff', methods=["UPDATE"])
+@login_required
+def staff():
+    if request.method == "UPDATE":
+        data = json.loads(request.data)
+        dl.staff.update(data)
     return {}
 
 @bp_infobord.route('/infobordview', methods=['GET'])
@@ -93,4 +101,10 @@ def meta():
         "field_info": field_info,
         "staff": staff,
     })
+
+@bp_infobord.route('/infobord/schedule', methods=['GET'])
+def schedule():
+    if request.method == "GET":
+        ret = al.models.get(dl.schoolschedule.Schedule, request.args)
+        return json.dumps(ret)
 

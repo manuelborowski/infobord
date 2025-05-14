@@ -101,6 +101,16 @@ def delete_multiple(model, ids=[], objs=[]):
     return None
 
 
+def truncate(model):
+    try:
+        model.query.delete()
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+    return None
+
+
 # filters is list of tupples: [(key, operator, value), ...]
 def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count=False, active=True, start=None, stop=None):
     try:

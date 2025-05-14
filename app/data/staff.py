@@ -18,6 +18,7 @@ class Staff(db.Model, SerializerMixin):
     id = db.Column(db.Integer(), primary_key=True)
     voornaam = db.Column(db.String(256), default='')
     naam = db.Column(db.String(256), default='')
+    roepnaam = db.Column(db.String(256), default='')
     code = db.Column(db.String(256), default='')
     rfid = db.Column(db.String(256), default='')
     ss_internal_nbr = db.Column(db.String(256), default='')
@@ -44,8 +45,8 @@ def add_m(data = []):
     return app.data.models.add_multiple(Staff, data, timestamp=True)
 
 
-def update(staff, data={}, commit=True):
-    return app.data.models.update_single(Staff, staff, data, commit)
+def update(data={}, commit=True):
+    return app.data.models.update_single(Staff, data, commit)
 
 
 def delete_m(ids=[], staffs=[]):
