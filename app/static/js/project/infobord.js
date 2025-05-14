@@ -401,7 +401,7 @@ class Info {
 
     prepend_vervanger_options = (row, options) => {
         const select = row.querySelector("[data-type=vervanger]");
-        options.forEach(i => select.prepend(new Option(i, i)));
+        options.forEach(i => select.prepend(new Option(i.label, i.value)));
         select.value = "";
     }
 
@@ -493,7 +493,7 @@ const __init_shortcut = () => {
                         for (const schedule of schedules) {
                             const staff = staff_cache[schedule.leerkracht];
                             const name = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
-                            standby.push(`(${standby_code}) ${name}`)
+                            standby.push({label: `(${standby_code}) ${name}`, value: name});
                         }
                     }
                     console.log(standby)
