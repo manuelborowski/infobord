@@ -53,8 +53,9 @@ from functools import wraps
 # 0.36: from the schedule, fetch vervangers (standby) and prepend them in the list of vervanger-options
 # 0.37: small bugfix
 # 0.38: standby, clean up value
+# 0.39: small bugfix
 
-version = "0.38"
+version = "0.39"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

@@ -403,6 +403,7 @@ class Info {
         const select = row.querySelector("[data-type=vervanger]");
         options.forEach(i => select.prepend(new Option(i.label, i.value)));
         select.value = "";
+        select.hidden = false;
     }
 
 }
