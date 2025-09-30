@@ -221,7 +221,8 @@ class Info {
         const dagen = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", ""];
         info_date_select.innerHTML = "";
         let date = new Date();
-        for (let dag = 0; dag < 35; dag++) {
+        date.setDate(date.getDate() - 15);
+        for (let dag = -15; dag < 35; dag++) {
             let day_of_week = date.getDay() % 7;
             let date_label = date.toISOString().split("T")[0];
             if (dag === 0 && !view_date) view_date = date_label;
@@ -233,6 +234,7 @@ class Info {
                     info_date_select.add(option);
                 }
             }
+            if (dag === 0) info_date_select.querySelector(`option[value="${date_label}"`).style.background = "yellow";
             date.setDate(date.getDate() + 1);
         }
         this.current_date = info_date_select.value;
