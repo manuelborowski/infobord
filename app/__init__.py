@@ -55,8 +55,9 @@ from functools import wraps
 # 0.38: standby, clean up value
 # 0.39: small bugfix
 # 0.40: add previous 15 days when selecting a date
+# 0.41: update date-selector to include weekends as well
 
-version = "0.40"
+version = "0.41"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 
