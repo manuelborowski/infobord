@@ -50,7 +50,6 @@ class ExtraInfo {
         this.quill.on("text-change", () => this.info_save_btn.classList.add("blink-button"));
         this.__location.addEventListener("input", () => this.info_save_btn.classList.add("blink-button"));
         this.info_save_btn = info_save_btn;
-
     }
 
     content_get() {

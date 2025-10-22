@@ -60,3 +60,7 @@ input {
     background: #a1e8a175;
     width: 50%;
 }
+
+p {
+    margin: 10px;
+}
