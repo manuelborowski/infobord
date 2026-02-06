@@ -95,6 +95,12 @@ class Info {
 
     draw = (data = [], nbr_rows = 20, add_to_table = false) => {
         const action_buttons = ` <a type="button" class="btn-item-delete btn btn-success"><i class="fa-solid fa-xmark" title="Lijn verwijderen"></i></a></div> `
+
+        const __color_cell = (cell, color) => {
+            cell.style.background = color;
+            cell.children[0].style.background = color;
+        }
+
         const __draw_row = (item) => {
             const tr = document.createElement("tr");
             table.appendChild(tr);
@@ -111,6 +117,13 @@ class Info {
                     td.appendChild(select);
                     select.dataset.type = "vervanger"
                     select.hidden = true;
+                    if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
+                } else if (column.source === "bericht" && item.id > 0) { // consider valid entries only
+                    const select = document.createElement("select")
+                    td.appendChild(select);
+                    select.dataset.field = "bericht";
+                    [[false, "Neen"], [true, "Ja"]].forEach(([value, label]) => {select.add(new Option(label, value, value === item[field], value === item[field]))});
+                    __color_cell(td, item[field] ? "yellow" : "");
                     if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
                 } else {
                     const input = document.createElement("input");
@@ -142,9 +155,19 @@ class Info {
             vervanger_field.value = value;
         }
 
+        const __message_sent = async e => {
+            const value = e.target.value;
+            const row = e.target.closest("tr");
+            const message_sent = row.querySelector("[data-field=bericht]");
+            await fetch_update("infobord.infobord", [{id: row.dataset.id, bericht: message_sent.value === "true"}]);
+            __color_cell(e.target.closest("td"), message_sent.value === "true" ? "yellow" : "");
+
+        }
+
         const string2cb = {
             lesuur_changed: __lesuur_changed,
-            vervanger_changed: __vervanger_changed
+            vervanger_changed: __vervanger_changed,
+            message_sent: __message_sent,
         }
 
         const string2value = {

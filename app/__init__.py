@@ -57,8 +57,9 @@ from functools import wraps
 # 0.40: add previous 15 days when selecting a date
 # 0.41: update date-selector to include weekends as well
 # 0.42: extra info, tighten margin around <p>'s
+# 0.43: added bericht-column, message sent
 
-version = "0.42"
+version = "0.43"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

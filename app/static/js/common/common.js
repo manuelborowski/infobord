@@ -14,8 +14,8 @@ export const fetch_post = async (endpoint, body, args={}) => {
     return __handle_fetch(response);
 }
 
-export const fetch_update = async (endpoint, body) => {
-    const response = await fetch(Flask.url_for(endpoint), {method: 'UPDATE', body: JSON.stringify(body),});
+export const fetch_update = async (endpoint, body, args={}) => {
+    const response = await fetch(Flask.url_for(endpoint, args), {method: 'UPDATE', body: JSON.stringify(body),});
     return __handle_fetch(response);
 }
 
