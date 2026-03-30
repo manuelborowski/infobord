@@ -103,6 +103,10 @@ class Info {
 
         const __draw_row = (item) => {
             const tr = document.createElement("tr");
+            if (meta.school_info.mark_recent_update && item.recent_update) {
+                if (meta.school_info.mark_recent_update.type === "color")
+                    tr.style.backgroundColor = meta.school_info.mark_recent_update.value;
+            }
             table.appendChild(tr);
             tr.dataset["id"] = item.id;
             for (const field of meta.school_info.fields) {

@@ -69,6 +69,10 @@ const __draw_table = () => {
         else
             item.lesuur = "";
         const tr = document.createElement("tr");
+        if (global_data.school_info.mark_recent_update && item.recent_update) {
+            if (global_data.school_info.mark_recent_update.type === "color")
+                tr.style.backgroundColor = global_data.school_info.mark_recent_update.value;
+        }
         table.appendChild(tr);
         for (const field of global_data.school_info.fields) {
             const column = global_data.field_info[field];

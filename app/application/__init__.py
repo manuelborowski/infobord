@@ -1,4 +1,4 @@
-__all__ = ["user", "datatables", "common", "settings", "cron", "socketio", "formio", "staff", "schoolschedule", "models"]
+__all__ = ["user", "datatables", "common", "settings", "cron", "socketio", "formio", "staff", "schoolschedule", "models", "infobord"]
 
 import app.application.user
 import app.application.datatables
@@ -9,6 +9,7 @@ import app.application.formio
 import app.application.staff
 import app.application.schoolschedule
 import app.application.models
+import app.application.infobord
 
 from app.application.staff import staff_load_from_sdh
 from app.application.schoolschedule import schedule_load_from_sdh

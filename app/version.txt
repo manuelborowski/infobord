@@ -1,0 +1,49 @@
+0.1 clone from laptop incident systeem 0.70
+0.2 able to add vervaningen
+0.3: gebruikers can only view
+0.4: added viewer
+0.5: multiple days
+0.6: added preview button.  Small bugfixes.  Remove date and logo from view
+0.7: added favicon
+0.8: view depends on lesuur (passed are not visible)
+0.9: small bugfix
+0.10: implemented vervangers
+0.11: small updates
+0.12: esthetic updates
+0.13: added more dates to select from
+0.14: updated preview so that future rosters can be displayed
+0.12-extra-info-0.1: backup
+0.12-extra-info-0.3: merge main
+0.12-extra-info-0.4: added extra info.  Bugfix in models.py
+0.15: merge from 0.12-extra-info-0.4
+0.16: small bugfix
+0.17: small bugfixes.  Added field stamlokaal.  Columns can be configured per school.
+0.18: update on models, update, add.  When info is updated, do not create new databaseentry, but update existing.
+0.19: added staff field to track who add a row.  Bugfixed deleting rows
+0.20: extra-info, changed type to String.
+0.21: small update
+0.22: moved code into Info class.  Bugfixed models
+0.23: cannot change date when current table is not saved.
+0.24: local storage, stored when an input changes (and save buttons starts to blink), cleared when saved to database or other date selected and loaded when page is loaded.
+It is not possible to switch date when current table is not saved.
+0.25: extra-info, added date field and can be placed at top
+0.26: navigate in table with arrow keys
+0.27: queue to 35 days.  Order on lesuur/klas
+0.28: added staff
+0.29: reworked settings to get lost of formio
+0.30: in table, column "Te vervangen", if a staff code is typed, it is replaced by the staff name
+0.31: navigate with ctrl + arrow key
+0.32: import schoolschedule.  When typing a staff code, use the schoolschedule to fetch the associated classes and classrooms.  Add option to overwrite and save a staff name with a nickname (roepnaam)
+0.33: local storage, ignore when date is too old
+0.34: info table, use columnname to get the columnindex to update a cell
+0.35: school_info, added use_schedule boolean to indicate the schedule is to be used or not
+0.36: from the schedule, fetch vervangers (standby) and prepend them in the list of vervanger-options
+0.37: small bugfix
+0.38: standby, clean up value
+0.39: small bugfix
+0.40: add previous 15 days when selecting a date
+0.41: update date-selector to include weekends as well
+0.42: extra info, tighten margin around <p>'s
+0.43: added bericht-column, message sent
+0.44: colorcode line if added present day:
+If staff adds a line, in the future, but in the present day, this line is color coded.  The idea is that this color coded line is noticed more easily by teachers
