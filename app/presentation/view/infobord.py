@@ -36,7 +36,7 @@ def infobord():
         al.infobord.add(data)
     if request.method == "UPDATE":
         data = json.loads(request.data)
-        al.infobord.update(data)
+        dl.infobord.update_m(data)
     if request.method == "DELETE":
         data = request.args.get("ids").split(",")
         dl.infobord.delete_m(ids=data)
