@@ -101,12 +101,20 @@ class Info {
             cell.children[0].style.background = color;
         }
 
+        const __recent_update_color_row = (row, recent_update) => {
+            if (meta.school_info.mark_recent_update) {
+                if (recent_update) {
+                    if (meta.school_info.mark_recent_update.type === "color")
+                        row.style.backgroundColor = meta.school_info.mark_recent_update.value;
+                } else {
+                    row.style.backgroundColor = "";
+                }
+            }
+        }
+
         const __draw_row = (item) => {
             const tr = document.createElement("tr");
-            if (meta.school_info.mark_recent_update && item.recent_update) {
-                if (meta.school_info.mark_recent_update.type === "color")
-                    tr.style.backgroundColor = meta.school_info.mark_recent_update.value;
-            }
+            __recent_update_color_row(tr, item.recent_update);
             table.appendChild(tr);
             tr.dataset["id"] = item.id;
             for (const field of meta.school_info.fields) {
@@ -129,6 +137,18 @@ class Info {
                     [[false, "Neen"], [true, "Ja"]].forEach(([value, label]) => {select.add(new Option(label, value, value === item[field], value === item[field]))});
                     __color_cell(td, item[field] ? "yellow" : "");
                     if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
+                } else if (column.source === "recent_update" && item.id > 0) { // consider valid entries only
+                    const div = document.createElement("div");
+                    td.appendChild(div);
+                    div.classList.add("form-check", "form-switch");
+                    const input = document.createElement("input");
+                    div.appendChild(input);
+                    input.classList.add("form-check-input");
+                    input.dataset.field = "recent_update";
+                    input.type = "checkbox";
+                    input.checked = item[field];
+                    input.style.marginLeft = "0.5em";
+                    if ("cb" in column && column.cb in string2cb) input.addEventListener("click", string2cb[column.cb]);
                 } else {
                     const input = document.createElement("input");
                     td.appendChild(input);
@@ -165,13 +185,21 @@ class Info {
             const message_sent = row.querySelector("[data-field=bericht]");
             await fetch_update("infobord.infobord", [{id: row.dataset.id, bericht: message_sent.value === "true"}]);
             __color_cell(e.target.closest("td"), message_sent.value === "true" ? "yellow" : "");
+        }
 
+        const __recent_update_changed = async e => {
+            const value = e.target.value;
+            const row = e.target.closest("tr");
+            const recent_update = row.querySelector("[data-field=recent_update]");
+            await fetch_update("infobord.infobord", [{id: row.dataset.id, recent_update: recent_update.checked}]);
+            __recent_update_color_row(row, recent_update.checked);
         }
 
         const string2cb = {
             lesuur_changed: __lesuur_changed,
             vervanger_changed: __vervanger_changed,
             message_sent: __message_sent,
+            recent_update: __recent_update_changed,
         }
 
         const string2value = {
@@ -222,7 +250,8 @@ class Info {
             this.row_remove(tr)
         }));
         // attach an eventhandler on each input of the table so that, when at least on input is changed, the save button begins to blink
-        Info.info_table_tbl.querySelectorAll("input").forEach(e => e.addEventListener("input", () => {
+        Info.info_table_tbl.querySelectorAll("input").forEach(e => e.addEventListener("input", (e) => {
+                if (meta.field_info[e.target.dataset.field].localstorage === false) return // no localstorage required
                 this.info_save_btn.classList.add("blink-button");
                 data = []
                 const rows = Info.info_table_tbl.querySelectorAll('[data-id]');
@@ -232,7 +261,7 @@ class Info {
                     const columns = row.querySelectorAll("[data-field]");
                     for (const column of columns) {
                         const field = column.dataset.field;
-                        item[field] = column.value
+                        item[field] = column.value;
                     }
                     if (item.lesuur > 0) data.push(item);
                 }
@@ -285,11 +314,16 @@ class Info {
         // check if data is stored in local storage for current page (school).  If so, use this iso from database.
         this.local_storage = JSON.parse(localStorage.getItem(`${global_data.school}-info-data`));
         if (this.local_storage) {
+            // Only local storage of today is valid.
             if (new Date(this.local_storage.date) >= new Date(new Date().setHours(0, 0, 0, 0))) {
                 this.current_date = this.local_storage.date;
                 info_date_select.value = this.current_date;
                 // if the local storage is not empty, it means the data is not saved yet to the database
                 this.info_save_btn.classList.add("blink-button");
+                // convert string "true", "on" to boolean true and "false", "off" to false
+                this.local_storage.info = this.local_storage.info.map(r => Object.fromEntries(Object.entries(r).map((([k, v]) => {
+                    return [k, ["true", "on"].includes(v) ? true : ["false", "off"].includes(v) ? false : v]
+                }))));
             } else {
                 this.local_storage = null;
             }
