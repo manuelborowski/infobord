@@ -5,7 +5,7 @@ from sqlalchemy_serializer import SerializerMixin
 
 
 class Infobord(db.Model, SerializerMixin):
-    __tablename__ = 'inforbords'
+    __tablename__ = 'infobords'
 
     date_format = '%Y/%m/%d'
     datetime_format = '%Y/%m/%d %H:%M'
@@ -23,6 +23,7 @@ class Infobord(db.Model, SerializerMixin):
     extra = db.Column(db.String(256), default='          ')
     datum = db.Column(db.String(256), default='')
     staff = db.Column(db.String(256), default='')
+    remark = db.Column(db.String(1000), default='')
     bericht = db.Column(db.Boolean, default=False)
     recent_update = db.Column(db.Boolean, default=False)
 

@@ -50,3 +50,4 @@ If staff adds a line, in the future, but in the present day, this line is color 
 0.45: bugfix, when updating, do not color code lines!
 When a certain entry is updated, and "bewaar" is clicked, all entries are treated as updated, hence, are color coded when they're in the future
 0.46: add slider to mark/unmark recent-updates
+0.47: add remark column
