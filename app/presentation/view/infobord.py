@@ -23,6 +23,7 @@ def infobord():
     school = request.args.get("school")
     datum = request.args.get("datum")
     if request.method == "GET":
+        # For a given day, go 4 weeks back, each time the same day and store in old-infos.  This is used to select the vervangers from
         week_old_infos = []
         for i in range(1, 4):
             date = datetime.datetime.strptime(datum, "%Y-%m-%d") - datetime.timedelta(days= 7 * i)

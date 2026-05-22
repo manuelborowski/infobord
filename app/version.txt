@@ -51,3 +51,4 @@ If staff adds a line, in the future, but in the present day, this line is color 
 When a certain entry is updated, and "bewaar" is clicked, all entries are treated as updated, hence, are color coded when they're in the future
 0.46: add slider to mark/unmark recent-updates
 0.47: add remark column
+0.48: add relevant standby staff (from schoolschedule)

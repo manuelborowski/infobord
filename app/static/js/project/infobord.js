@@ -128,8 +128,12 @@ class Info {
                     const select = document.createElement("select")
                     td.appendChild(select);
                     select.dataset.type = "vervanger"
-                    select.hidden = true;
-                    if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
+                    // Add empty option
+                    select.add(new Option("\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0", "null"))
+                    // A click will use lesuur, date and school to fetch the standby staff from the server and populate the select
+                    select.addEventListener("click", e => __vervanger_clicked(e));
+                    // A change will copy the value from the select to the column "vervanger"
+                    select.addEventListener("change", e => __vervanger_changed(e));
                 } else if (column.source === "bericht" && item.id > 0) { // consider valid entries only
                     const select = document.createElement("select")
                     td.appendChild(select);
@@ -161,22 +165,32 @@ class Info {
             }
         }
 
-        const __lesuur_changed = e => {
-            const select = e.target.closest("tr").querySelector("[data-type=vervanger]");
-            if (e.target.value in this.vervangers) {
-                select.innerHTML = "";
-                this.vervangers[e.target.value].forEach(i => select.add(new Option(i, i)));
-                select.value = "";
-                select.hidden = false;
-            } else {
-                select.hidden = true;
+        const __vervanger_clicked = async e => {
+            // this is called twice, first to populate and open the select, then when a selection is made.  Ignore the second click
+            if (e.target.options.length > 1) return
+            const day = new Date(document.getElementById("info-date").value).getDay();
+            const current_tr = e.target.closest("tr");
+            const lesuur = current_tr.children[1].firstChild.value;
+            for (const standby_code of meta.school_info.standby_code) {
+                const schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},vak$=$${standby_code}`});
+                for (const schedule of schedules) {
+                    const staff = code2staff[schedule.leerkracht];
+                    const name = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
+                    e.target.add(new Option(`(${standby_code}) ${name}`, name));
+                }
+            }
+            // Add, if required, the default standby options
+            if (meta.school_info.default_standby) {
+                meta.school_info.default_standby.forEach(i => e.target.add(new Option(i, i)));
             }
         }
 
         const __vervanger_changed = e => {
             const value = e.target.value;
+            if (value === "null") return
             const vervanger_field = e.target.closest("tr").querySelector("[data-field=vervanger]");
             vervanger_field.value = value;
+            this.info_save_btn.classList.add("blink-button");
         }
 
         const __message_sent = async e => {
@@ -196,7 +210,6 @@ class Info {
         }
 
         const string2cb = {
-            lesuur_changed: __lesuur_changed,
             vervanger_changed: __vervanger_changed,
             message_sent: __message_sent,
             recent_update: __recent_update_changed,
@@ -509,9 +522,9 @@ const __init_arrow_keys = () => {
 }
 
 // Type a staff code and press enter.  Relevant info (full name, schedule info) is fetched and fields in the row are populated.
-let staff_cache = {};
+let code2staff = {};
 const __init_shortcut = () => {
-    staff_cache = Object.fromEntries(meta.staff.map(s => [s.code, s]))
+    code2staff = Object.fromEntries(meta.staff.map(s => [s.code, s]))
     document.addEventListener('keyup', async event => {
         const current_td = document.activeElement.parentNode;
         const current_tr = current_td.parentNode;
@@ -519,9 +532,9 @@ const __init_shortcut = () => {
         // consider the 3rd column only (Te vervangen)
         if (index === info.column_index("leerkracht")) {
             const value = document.activeElement.value;
-            if (event.code === "Enter" && value.toUpperCase() in staff_cache) {
+            if (event.code === "Enter" && value.toUpperCase() in code2staff) {
                 const code = value.toUpperCase();
-                const staff = staff_cache[code];
+                const staff = code2staff[code];
                 document.activeElement.value = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
                 if (meta.school_info.use_schedule) {
                     const lesuur = current_tr.children[1].firstChild.value;
@@ -549,19 +562,6 @@ const __init_shortcut = () => {
                             current_tr.children[info.column_index("locatie")].firstChild.value = lokaal;
                         current_tr.children[info.column_index("klas")].firstChild.value = klascode;
                     }
-                    // Try to fetch vervangers (standby) from the schedule and prepend them in the option-list of vervangers
-                    let standby = [];
-                    for (const standby_code of meta.school_info.standby_code) {
-                        schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},vak$=$${standby_code}`});
-                        for (const schedule of schedules) {
-                            const staff = staff_cache[schedule.leerkracht];
-                            const name = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
-                            standby.push({label: `(${standby_code}) ${name}`, value: name});
-                        }
-                    }
-                    console.log(standby)
-                    info.prepend_vervanger_options(current_tr, standby);
-
                 }
                 current_tr.dataset["code"] = code
             }
@@ -601,8 +601,8 @@ const __save_roepnaam = async (ids) => {
     const row = document.querySelector(`tr[data-id='${id}']`);
     const code = row.dataset.code;
     const roepnaam = row.children[2].firstChild.value;
-    staff_cache[code].roepnaam = roepnaam;
-    await fetch_update("infobord.staff", {id: staff_cache[code].id, roepnaam})
+    code2staff[code].roepnaam = roepnaam;
+    await fetch_update("infobord.staff", {id: code2staff[code].id, roepnaam})
 }
 
 const __get_row_id = (event) => {
