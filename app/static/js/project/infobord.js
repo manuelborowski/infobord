@@ -606,12 +606,82 @@ const __save_roepnaam = async (ids) => {
     await fetch_update("infobord.staff", {id: code2staff[code].id, roepnaam})
 }
 
+const __row_to_item = (row, datum) => {
+    const item = {school: global_data.school, datum};
+    for (const field of meta.school_info.fields) {
+        const column = row.querySelector(`[data-field=${field}]`);
+        if (!column) continue;
+        if (column.dataset.type === "int") {
+            const value = parseInt(column.value);
+            item[field] = isNaN(value) ? 0 : value;
+        } else if (column.type === "checkbox") {
+            item[field] = column.checked;
+        } else {
+            item[field] = column.value;
+        }
+    }
+    return item;
+}
+
+const __prompt_copy_until_date = () => {
+    return new Promise(resolve => {
+        bootbox.prompt({
+            title: "Kopieer deze lijn tot en met",
+            inputType: "date",
+            value: info_date_select.value,
+            callback: result => resolve(result),
+        });
+    });
+}
+
+const __parse_date = value => {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+const __format_date = date => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+// Copy the select line, each time one week later, until the selected date.
+const __copy_row_weekly = async (ids) => {
+    const id = ids[0];
+    const row = document.querySelector(`tr[data-id='${id}']`);
+    if (!row) return;
+
+    const source_date = __parse_date(info_date_select.value);
+    const end_date_value = await __prompt_copy_until_date();
+    if (!end_date_value) return;
+
+    const end_date = __parse_date(end_date_value);
+    const source_timestamp = Date.UTC(source_date.getFullYear(), source_date.getMonth(), source_date.getDate());
+    const end_timestamp = Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate());
+    const days_between = Math.round((end_timestamp - source_timestamp) / (24 * 60 * 60 * 1000));
+    if (days_between <= 0 || days_between % 7 !== 0) {
+        bootbox.alert("Kies een datum minstens 1 week later op dezelfde weekdag.");
+        return;
+    }
+    const data = [];
+    const copy_date = new Date(source_date);
+    copy_date.setDate(copy_date.getDate() + 7);
+    while (copy_date <= end_date) {
+        data.push(__row_to_item(row, __format_date(copy_date)));
+        copy_date.setDate(copy_date.getDate() + 7);
+    }
+    await fetch_post("infobord.infobord", data, {school: global_data.school, datum: info_date_select.value});
+    bootbox.alert(`${data.length} lijn(en) gekopieerd.`);
+}
+
 const __get_row_id = (event) => {
-    return [event.target.parentNode.parentNode.dataset.id];
+    return [event.target.closest("tr").dataset.id];
 }
 
 const context_menu_items = [
     {type: "item", label: 'Roepnaam bewaren', iconscout: 'plus-circle', cb: __save_roepnaam},
+    {type: "item", label: 'Kopieer deze lijn', iconscout: 'copy', cb: __copy_row_weekly},
 ]
 
 $(document).ready(async function () {
