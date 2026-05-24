@@ -101,6 +101,7 @@ def meta():
         "school_info": school_info,
         "field_info": field_info,
         "staff": staff,
+        "klasgroepen": al.infobord.get_klasgroepen(school),
     })
 
 @bp_infobord.route('/infobord/schedule', methods=['GET'])
@@ -108,4 +109,3 @@ def schedule():
     if request.method == "GET":
         ret = al.models.get(dl.schoolschedule.Schedule, request.args)
         return json.dumps(ret)
-

@@ -52,3 +52,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.46: add slider to mark/unmark recent-updates
 0.47: add remark column
 0.48: add relevant standby staff (from schoolschedule)
+0.49: sul-specific, return the exact klassen if required, i.e. when according to the schoolschedule, less klassen are involved than available.

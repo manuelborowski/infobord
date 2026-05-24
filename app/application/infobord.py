@@ -40,3 +40,21 @@ def add(data):
 
 def update(data):
     return add_update(data, False)
+
+def get_klasgroepen(school):
+    try:
+        klasgroepen = {}
+        schedules = dl.schoolschedule.get_m([("school", "=", school)], order_by=["klascode"])
+        for schedule in schedules:
+            klascode_parts = schedule.klascode.split(" ", 1)
+            if len(klascode_parts) != 2:
+                continue
+            klasgroep, klas = klascode_parts
+            if klasgroep not in klasgroepen:
+                klasgroepen[klasgroep] = []
+            if klas not in klasgroepen[klasgroep]:
+                klasgroepen[klasgroep].append(klas)
+        return klasgroepen
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {}

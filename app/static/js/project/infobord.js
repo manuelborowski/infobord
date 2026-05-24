@@ -6,6 +6,24 @@ let meta = await fetch_get("infobord.meta", {school: global_data.school});
 let info = null;
 const info_date_select = document.getElementById("info-date");
 
+const format_sul_klascode = schedules => {
+    const grouped_klassen = {};
+    for (const schedule of schedules) {
+        // klasgroep: 4A, klas: GL4
+        const [klasgroep, klas] = schedule.klascode.split(" ", 2);
+        if (!klasgroep || !klas) continue;
+        if (!(klasgroep in grouped_klassen)) grouped_klassen[klasgroep] = [];
+        if (!grouped_klassen[klasgroep].includes(klas)) grouped_klassen[klasgroep].push(klas);
+    }
+    return Object.entries(grouped_klassen).map(([klasgroep, klassen]) => {
+        const all_klassen = meta.klasgroepen?.[klasgroep] ?? [];
+        // A complete klasgroep is returned as just the klasgroep.
+        if (all_klassen.length > 0 && klassen.length === all_klassen.length) return klasgroep;
+        // return the klasgroep, together with a list of klassen
+        return `${klasgroep} ${klassen.sort().join(", ")}`;
+    }).join("; ");
+}
+
 class ExtraInfo {
     static quill_toolbar_options = [
         ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
@@ -473,14 +491,6 @@ class Info {
     column_index = name => {
         return meta.school_info.fields.indexOf(name);
     }
-
-    prepend_vervanger_options = (row, options) => {
-        const select = row.querySelector("[data-type=vervanger]");
-        options.forEach(i => select.prepend(new Option(i.label, i.value)));
-        select.value = "";
-        select.hidden = false;
-    }
-
 }
 
 // Use arrow keys to navigate through the table.
@@ -546,16 +556,7 @@ const __init_shortcut = () => {
                         let lokaal = [...new Set(schedules.map(s => s.lokaal))].join(", ");
                         if (global_data.school === "sum") klascode = schedules[0].klascode.substring(0, 2);
                         else if (global_data.school === "sui") klascode = [...new Set(schedules.map(s => s.klascode))].join(", ");
-                        else if (global_data.school === "sul")
-                            if (schedules.length === 1) {
-                                klascode = schedules[0].klascode;
-                            } else {
-                                const klascodes = [...new Set(schedules.map(s => s.klascode))];
-                                if (klascodes.length === 1)
-                                    klascode = klascodes[0]
-                                else
-                                    klascode = [...new Set(klascodes.map(k => k.substring(0, 2)))].join(", ");
-                            }
+                        else if (global_data.school === "sul") klascode = format_sul_klascode(schedules);
                         if (global_data.school === "sum")
                             current_tr.children[info.column_index("stamlokaal")].firstChild.value = lokaal;
                         else
@@ -636,4 +637,3 @@ $(document).ready(async function () {
     const context_menu = new ContextMenu(document.getElementById("info-table"), context_menu_items);
     context_menu.subscribe_get_ids(__get_row_id);
 });
-
