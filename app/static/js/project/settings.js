@@ -28,6 +28,15 @@ const template =
                     ]
                 },
                 {
+                    type: "container", label: "Smartschool", save: true, default_collapsed: true, rows: [
+                        [{label: "Bericht onderwerp", name: "smartschool-message-title", type: "input"}],
+                        {label: "Bericht inhoud", name: "smartschool-message-body", type: "quill", editor_height: "220px"},
+                        {label: "Extra ontvangers (YAML lijst met personeelscodes)", name: "smartschool-message-additional-receivers", type: "textarea"},
+                        [{label: "Smartschool berichten effectief verzenden?", name: "smartschool-message-enable-sending", type: "check"}],
+                        {type: "div", innerHTML: "Extra ontvangers voorbeeld:<br>- boro<br>- ABC<br># commentaar<br><br>Beschikbare variabelen: %%NAAM%%, %%VOORNAAM%%, %%ROEPNAAM%%, %%KLAS%%, %%KLASGROEP%%, %%LEERLINGNUMMER%%, %%DATUM%%, %%LESUUR%%, %%LEERKRACHT%%, %%VERVANGER%%, %%LOCATIE%%, %%STAMLOKAAL%%, %%INFO%%, %%EXTRA%%"}
+                    ]
+                },
+                {
                     type: "container", label: "Scholen configuratie", save: true, default_collapsed: true, rows: [
                         {label: "YAML", name: "school-configuration", type: "textarea"},
                     ]
@@ -81,7 +90,7 @@ const __create_html_page = async () => {
 
     const settings = await fetch_get("settings.setting");
     if (settings && settings.data) {
-        bform.populate(settings.data, meta);
+        await bform.populate(settings.data, meta);
     }
 
 }
@@ -91,4 +100,3 @@ $(document).ready(function () {
     __handle_save();
     base_init({});
 });
-

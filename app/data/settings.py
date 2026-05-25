@@ -89,6 +89,11 @@ default_configuration_settings = {
     'cron-scheduler-template': ('', Settings.SETTING_TYPE.E_STRING),
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),
 
+    'smartschool-message-title': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-body': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-additional-receivers': ('', Settings.SETTING_TYPE.E_YAML),
+    'smartschool-message-enable-sending': (True, Settings.SETTING_TYPE.E_BOOL),
+
     'user-datatables-template': ({}, Settings.SETTING_TYPE.E_YAML),
 
     'school-configuration': ({}, Settings.SETTING_TYPE.E_YAML),

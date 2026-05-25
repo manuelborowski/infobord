@@ -1,0 +1,31 @@
+from app import app
+from zeep import Client
+import inspect
+
+# logging on file level
+import logging
+from app import MyLogFilter, top_log_handle
+
+log = logging.getLogger(f"{top_log_handle}.{__name__}")
+log.addFilter(MyLogFilter())
+
+soap = None
+
+
+def _soap_client():
+    global soap
+    if soap is None:
+        soap = Client(app.config["SS_API_URL"])
+    return soap
+
+
+def send_message(to, sender, subject, body, account=0, enable_sending=True):
+    try:
+        ret = -1
+        if enable_sending:
+            ret = _soap_client().service.sendMsg(app.config["SS_API_KEY"], to, subject, body, sender, "", account, False)
+        log.info(f'{inspect.currentframe().f_code.co_name}: to {to}/{account}, from {sender}, subject {subject}, ret {ret}, enable_sending {enable_sending}')
+        return ret
+    except Exception as e:
+        log.error(f'{inspect.currentframe().f_code.co_name}: {e}')
+        return -1

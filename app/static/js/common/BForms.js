@@ -18,8 +18,10 @@
 // Single row with one element
 // name: the name attribute of the element
 // save: if present and true, a save button is added in front of the element
-// type: textarea, check, select, input
+// type: textarea, quill, check, select, input
 //                 {label: "Gebruikers", name: "user-datatables-template", type: "textarea", save: true},
+// Quill HTML editor.  The value is stored in a hidden textarea with the field name.
+//                 {label: "Bericht", name: "message-body", type: "quill", editor_height: "220px"},
 // Single row with two elements, i.e. it is a list
 //                [{label: "Start cron cyclus?", id: "display-button-start-cron-cycle", type: "check", save: false},
 //                             {label: "Start", id: "button-start-cron-cycle", type: "button", save: false}],
@@ -40,10 +42,22 @@
 export class BForms {
     id2element = {}
     typecasts = []
+    quill_editors = {}
 
     constructor(template) {
         this.form = document.createElement("form");
         this.add(this.form, template)
+    }
+
+    // If Quill is used, ensure a link to the css is inserted once
+    ensure_quill_css = () => {
+        const href = "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css";
+        if (!document.querySelector(`link[href="${href}"]`)) {
+            const link = document.createElement("link");
+            link.href = href;
+            link.rel = "stylesheet";
+            document.head.appendChild(link);
+        }
     }
 
     // add a template to the form
@@ -127,6 +141,7 @@ export class BForms {
                     form_row.appendChild(form_element);
                     form_element.classList.add("form-element");
                     let tag = null;
+                    let quill_editor = null;
                     if (element.type === "div") {
                         tag = document.createElement("div");
                         form_element.appendChild(tag);
@@ -152,6 +167,15 @@ export class BForms {
                             tag.rows = "10";
                             tag.cols = "150";
                             label.classList.add("top");
+                        } else if (element.type === "quill") {
+                            // Create a hidden textarea and insert a div inside to hold the quill-editor
+                            this.ensure_quill_css();
+                            tag = document.createElement("textarea");
+                            tag.hidden = true;
+                            quill_editor = document.createElement("div");
+                            quill_editor.style.minHeight = element.editor_height || "220px";
+                            quill_editor.classList.add("bform-quill-editor");
+                            label.classList.add("top");
                         } else if (element.type === "check") {
                             tag = document.createElement("input");
                             tag.type = "checkbox"
@@ -163,6 +187,7 @@ export class BForms {
                         if (tag) {
                             label.appendChild(span);
                             label.appendChild(tag);
+                            if (quill_editor) label.appendChild(quill_editor);
                             if (format) {
                                 if (format === "vertical-center") {
                                     label.classList.add("vertical-center-label");
@@ -173,6 +198,11 @@ export class BForms {
                         }
                     }
                     __add_tag_attributes(element, tag);
+                    if (quill_editor && element.name) {
+                        // Create a new quill editor inside the hidden textarea
+                        if (element.editor_id) quill_editor.id = element.editor_id;
+                        this.quill_editors[element.name] = new Quill(quill_editor, element.quill || {theme: "snow"});
+                    }
                     if ("id" in element) this.id2element[element.id] = {element: tag, type: "element"};
                 }
 
@@ -194,6 +224,7 @@ export class BForms {
 
     // Iterate over data.  If a corresponding field (in the form) is found, set the value.
     // In case of a select, it is possible to limit the number of options, depending on the category
+    // Quill: the original field is hidden and its value is copied to the quill-field
     populate = async (data, meta = null) => {
         for (let [field_name, value] of Object.entries(data)) {
             const field = this.form.querySelector(`[name=${field_name}]`);
@@ -202,8 +233,9 @@ export class BForms {
                     field.checked = value;
                 } else if (field.classList.contains("select2-hidden-accessible")) { // select2 type
                     await $(`[name=${field_name}]`).val(value).trigger("change");
-                } else if (field.classList.contains("ql-container") && "quill" in meta && field_name in meta.quill) { // quill html editor
-                    await meta.quill[field_name].clipboard.dangerouslyPasteHTML(value);
+                } else if (field_name in this.quill_editors) {
+                    field.value = value || "";
+                    await this.quill_editors[field_name].clipboard.dangerouslyPasteHTML(value || "");
                 } else if (field.type === "select-one") {
                     if (meta && "keyed_option" in meta && field_name in meta.keyed_option) {
                         if ("key_field" in meta.keyed_option[field_name]) {
@@ -229,7 +261,12 @@ export class BForms {
     // Get the value of all html elements with a "name" attribute
     // All checkboxes are present with a true or false value
     // If required (depending on the template) a value can be typecasted.
+    // Quill: the original field is hidden and the value of the quill-field is copied to the original field
     get_data = () => {
+        for (const [field_name, quill] of Object.entries(this.quill_editors)) {
+            const field = this.form.querySelector(`[name=${field_name}]`);
+            if (field) field.value = quill.root.innerHTML;
+        }
         const form_data = Object.fromEntries(new FormData(this.form));
         // checkboxes are present only when selected and have the value "on" => convert
         this.form.querySelectorAll("input[type='checkbox']").forEach(c => {

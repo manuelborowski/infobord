@@ -20,8 +20,8 @@ const format_sul_klascode = schedules => {
         // A complete klasgroep is returned as just the klasgroep.
         if (all_klassen.length > 0 && klassen.length === all_klassen.length) return klasgroep;
         // return the klasgroep, together with a list of klassen
-        return `${klasgroep} ${klassen.sort().join(", ")}`;
-    }).join("; ");
+        return klassen.sort().map(klas => `${klasgroep} ${klas}`).join(", ");
+    }).join(", ");
 }
 
 class ExtraInfo {
