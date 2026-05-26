@@ -33,7 +33,7 @@ const template =
                         {label: "Bericht inhoud", name: "smartschool-message-body", type: "quill", editor_height: "220px"},
                         {label: "Extra ontvangers (YAML lijst met personeelscodes)", name: "smartschool-message-additional-receivers", type: "textarea"},
                         [{label: "Smartschool berichten effectief verzenden?", name: "smartschool-message-enable-sending", type: "check"}],
-                        {type: "div", innerHTML: "Extra ontvangers voorbeeld:<br>- boro<br>- ABC<br># commentaar<br><br>Beschikbare variabelen: %%NAAM%%, %%VOORNAAM%%, %%ROEPNAAM%%, %%KLAS%%, %%KLASGROEP%%, %%LEERLINGNUMMER%%, %%DATUM%%, %%LESUUR%%, %%LEERKRACHT%%, %%VERVANGER%%, %%LOCATIE%%, %%STAMLOKAAL%%, %%INFO%%, %%EXTRA%%"}
+                        {type: "div", innerHTML: "Extra ontvangers voorbeeld:<br>- boro<br>- ABC<br># commentaar<br><br>Beschikbare variabelen: %%NAAM%%, %%VOORNAAM%%, %%ROEPNAAM%%, %%KLAS%%, %%LEERLINGNUMMER%%, %%DATUM%%, %%LESUUR%%, %%LEERKRACHT%%, %%VERVANGER%%, %%LOCATIE%%, %%STAMLOKAAL%%, %%INFO%%, %%EXTRA%%"}
                     ]
                 },
                 {

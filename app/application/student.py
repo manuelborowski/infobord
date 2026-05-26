@@ -13,13 +13,10 @@ def _student_payload(sdh_student):
     klascode = sdh_student.get("klascode", "")
     return {
         "leerlingnummer": sdh_student.get("leerlingnummer", ""),
-        "klas": sdh_student.get("klas", klascode),
         "klascode": klascode,
-        "klasgroep": sdh_student.get("klasgroep", ""),
         "naam": sdh_student.get("naam", ""),
         "voornaam": sdh_student.get("voornaam", ""),
         "roepnaam": sdh_student.get("roepnaam", ""),
-        "rfid": sdh_student.get("rfid", ""),
         "instellingsnummer": sdh_student.get("instellingsnummer", ""),
         "username": sdh_student.get("username", ""),
     }

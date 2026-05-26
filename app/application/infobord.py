@@ -95,11 +95,13 @@ def _students_for_klas(klas):
     students = []
     seen = set()
     for token in tokens:
-        for field in ["klas", "klascode", "klasgroep"]:
-            for student in dl.student.get_m([(field, "=", token)]):
-                if student.leerlingnummer not in seen:
-                    students.append(student)
-                    seen.add(student.leerlingnummer)
+        token_students = dl.student.get_m([("klascode", "=", token)])
+        if not token_students:
+            token_students = [student for student in dl.student.get_m() if student.klascode.startswith(token)]
+        for student in token_students:
+            if student.leerlingnummer not in seen:
+                students.append(student)
+                seen.add(student.leerlingnummer)
     return students
 
 def _replace_message_tags(template, student, info):
@@ -107,9 +109,7 @@ def _replace_message_tags(template, student, info):
         "%%NAAM%%": student.naam if student else "",
         "%%VOORNAAM%%": student.voornaam if student else "",
         "%%ROEPNAAM%%": student.roepnaam if student else "",
-        "%%KLAS%%": (student.klas or student.klascode) if student else info.klas,
-        "%%KLASCODE%%": student.klascode if student else "",
-        "%%KLASGROEP%%": student.klasgroep if student else "",
+        "%%KLAS%%": student.klascode if student else info.klas,
         "%%LEERLINGNUMMER%%": student.leerlingnummer if student else "",
         "%%DATUM%%": info.datum,
         "%%LESUUR%%": str(info.lesuur),

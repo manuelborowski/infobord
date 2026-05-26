@@ -13,13 +13,10 @@ class Student(db.Model, SerializerMixin):
     voornaam = db.Column(db.String(256), default='')
     naam = db.Column(db.String(256), default='')
     roepnaam = db.Column(db.String(256), default='')
-    klas = db.Column(db.String(256), default='')
     klascode = db.Column(db.String(256), default='')
-    klasgroep = db.Column(db.String(256), default='')
     instellingsnummer = db.Column(db.String(256), default='')
     leerlingnummer = db.Column(db.String(256), default='')
     username = db.Column(db.String(256), default='')
-    rfid = db.Column(db.String(256), default='')
 
     timestamp = db.Column(db.DateTime)
 
