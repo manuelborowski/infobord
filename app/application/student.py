@@ -9,7 +9,6 @@ import logging
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
-
 def _student_payload(sdh_student):
     klascode = sdh_student.get("klascode", "")
     return {
@@ -24,7 +23,6 @@ def _student_payload(sdh_student):
         "instellingsnummer": sdh_student.get("instellingsnummer", ""),
         "username": sdh_student.get("username", ""),
     }
-
 
 def student_load_from_sdh(opaque=None, **kwargs):
     try:

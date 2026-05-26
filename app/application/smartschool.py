@@ -19,12 +19,12 @@ def _soap_client():
     return soap
 
 
-def send_message(to, sender, subject, body, account=0, enable_sending=True):
+def send_message(to, sender, subject, body, account=0, enable_sending=True, extra=""):
     try:
         ret = -1
         if enable_sending:
             ret = _soap_client().service.sendMsg(app.config["SS_API_KEY"], to, subject, body, sender, "", account, False)
-        log.info(f'{inspect.currentframe().f_code.co_name}: to {to}/{account}, from {sender}, subject {subject}, ret {ret}, enable_sending {enable_sending}')
+        log.info(f'{inspect.currentframe().f_code.co_name}: to {to}/{account}, from {sender}, subject {subject}, ret {ret}, enable_sending {enable_sending}{extra}')
         return ret
     except Exception as e:
         log.error(f'{inspect.currentframe().f_code.co_name}: {e}')

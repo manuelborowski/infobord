@@ -12,8 +12,11 @@ log.addFilter(MyLogFilter())
 def add_update(data, add=True):
     try:
         if data:
-            school = data[0]["school"]
-            school_info = dl.settings.get_configuration_setting("school-configuration")[school]
+            school = data[0].get("school")
+            if not school and not add and "id" in data[0]:
+                infobord = dl.infobord.get([("id", "=", data[0]["id"])])
+                school = infobord.school if infobord else None
+            school_info = dl.settings.get_configuration_setting("school-configuration")[school] if school else {}
             if "mark_recent_update" in school_info:
                 now = datetime.datetime.now()
                 now_string = str(now)
@@ -28,7 +31,8 @@ def add_update(data, add=True):
                         now_lestijd = lestijd
                         break
                 for d in data:
-                    d["recent_update"] = d["lesuur"] > now_lestijd and d["datum"] == date
+                    if "lesuur" in d and "datum" in d:
+                        d["recent_update"] = d["lesuur"] > now_lestijd and d["datum"] == date
             if add:
                 dl.infobord.add_m(data)
             else:
@@ -152,7 +156,7 @@ def send_smartschool_message(infobord_id):
             for student in students:
                 subject = _replace_message_tags(subject_template, student, info)
                 body = _replace_message_tags(body_template, student, info)
-                ss_send_message(student.leerlingnummer, sender, subject, body, 0, enable_sending)
+                ss_send_message(student.leerlingnummer, sender, subject, body, 0, enable_sending, f", {student.klascode}")
                 sent += 1
             subject = _replace_message_tags(subject_template, None, info)
             body = _replace_message_tags(body_template, None, info)

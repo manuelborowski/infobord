@@ -55,3 +55,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.49: sul-specific, return the exact klassen if required, i.e. when according to the schoolschedule, less klassen are involved than available.
 0.50: add a context-menu-item to copy a line into the future.  Select a date, and the line is copied (each time one week later) until the selected date.
 0.51: add functionality to send a smartschool message to a klas and/or staff
+0.52: bugfix recent-update and send-message buttons, add parameter "school"

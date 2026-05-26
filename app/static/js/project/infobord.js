@@ -215,7 +215,7 @@ class Info {
             const value = e.target.value;
             const row = e.target.closest("tr");
             const message_sent = row.querySelector("[data-field=bericht]");
-            await fetch_update("infobord.infobord", [{id: row.dataset.id, bericht: message_sent.value === "true"}]);
+            await fetch_update("infobord.infobord", [{id: row.dataset.id, school: global_data.school, bericht: message_sent.value === "true"}]);
             __color_cell(e.target.closest("td"), message_sent.value === "true" ? "yellow" : "");
         }
 
@@ -223,7 +223,7 @@ class Info {
             const value = e.target.value;
             const row = e.target.closest("tr");
             const recent_update = row.querySelector("[data-field=recent_update]");
-            await fetch_update("infobord.infobord", [{id: row.dataset.id, recent_update: recent_update.checked}]);
+            await fetch_update("infobord.infobord", [{id: row.dataset.id, school: global_data.school, recent_update: recent_update.checked}]);
             __recent_update_color_row(row, recent_update.checked);
         }
 
