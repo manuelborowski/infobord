@@ -56,3 +56,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.50: add a context-menu-item to copy a line into the future.  Select a date, and the line is copied (each time one week later) until the selected date.
 0.51: add functionality to send a smartschool message to a klas and/or staff
 0.52: bugfix recent-update and send-message buttons, add parameter "school"
+0.53: bugfixed add/update.  Clean up/made consistent the school/datum parameters

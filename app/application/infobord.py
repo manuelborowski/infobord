@@ -9,19 +9,14 @@ from app import MyLogFilter, top_log_handle, app
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
-def add_update(data, add=True):
+def _mark_recent_updates(data, school, datum):
     try:
         if data:
-            school = data[0].get("school")
-            if not school and not add and "id" in data[0]:
-                infobord = dl.infobord.get([("id", "=", data[0]["id"])])
-                school = infobord.school if infobord else None
             school_info = dl.settings.get_configuration_setting("school-configuration")[school] if school else {}
             if "mark_recent_update" in school_info:
                 now = datetime.datetime.now()
                 now_string = str(now)
                 date = now_string[:10]
-                time =  now_string[11:19]
                 now_lestijd = 10
                 lestijden = app.config["LESTIJDEN"]
                 for lestijd in range(9, 0, -1):
@@ -31,17 +26,17 @@ def add_update(data, add=True):
                         now_lestijd = lestijd
                         break
                 for d in data:
-                    if "lesuur" in d and "datum" in d:
-                        d["recent_update"] = d["lesuur"] > now_lestijd and d["datum"] == date
-            if add:
-                dl.infobord.add_m(data)
-            else:
-                dl.infobord.update_m(data)
+                    if "lesuur" in d:
+                        d["recent_update"] = d["lesuur"] > now_lestijd and datum == date
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
 
-def add(data):
-    return add_update(data)
+def add(data, school, datum):
+    for item in data:
+        item["school"] = school
+        item["datum"] = datum
+    _mark_recent_updates(data, school, datum)
+    return dl.infobord.add_m(data)
 
 def update(data):
     try:
@@ -54,7 +49,7 @@ def update(data):
             current = dl.infobord.get([("id", "=", item["id"])])
             if current and not current.bericht:
                 message_jobs.append(current.id)
-        ret = add_update(data, False)
+        ret = dl.infobord.update_m(data)
         for infobord_id in message_jobs:
             socketio.start_background_task(send_smartschool_message, infobord_id)
         return ret

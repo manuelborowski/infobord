@@ -102,13 +102,16 @@ class ExtraInfo {
 class Info {
     static info_table_tbl = document.getElementById("info-table");
 
-    vervangers = {};
-
     constructor(info_save_btn) {
         this.info_save_btn = info_save_btn;
         this.info_delete = [];
         this.extra_info = new ExtraInfo(info_save_btn);
         this.id_ctr = -1;
+    }
+
+    field_value = (column) => {
+        if (column.type === "checkbox") return column.checked;
+        return column.value;
     }
 
     draw = (data = [], nbr_rows = 20, add_to_table = false) => {
@@ -215,7 +218,7 @@ class Info {
             const value = e.target.value;
             const row = e.target.closest("tr");
             const message_sent = row.querySelector("[data-field=bericht]");
-            await fetch_update("infobord.infobord", [{id: row.dataset.id, school: global_data.school, bericht: message_sent.value === "true"}]);
+            await fetch_update("infobord.infobord", [{id: row.dataset.id, bericht: message_sent.value === "true"}]);
             __color_cell(e.target.closest("td"), message_sent.value === "true" ? "yellow" : "");
         }
 
@@ -223,7 +226,7 @@ class Info {
             const value = e.target.value;
             const row = e.target.closest("tr");
             const recent_update = row.querySelector("[data-field=recent_update]");
-            await fetch_update("infobord.infobord", [{id: row.dataset.id, school: global_data.school, recent_update: recent_update.checked}]);
+            await fetch_update("infobord.infobord", [{id: row.dataset.id, recent_update: recent_update.checked}]);
             __recent_update_color_row(row, recent_update.checked);
         }
 
@@ -292,7 +295,7 @@ class Info {
                     const columns = row.querySelectorAll("[data-field]");
                     for (const column of columns) {
                         const field = column.dataset.field;
-                        item[field] = column.value;
+                        item[field] = this.field_value(column);
                     }
                     if (item.lesuur > 0) data.push(item);
                 }
@@ -363,18 +366,6 @@ class Info {
         const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: this.current_date});
         if (resp_info) {
             resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
-            // prepare list of vervangers
-            if ("vervangers" in resp_info && resp_info.vervangers.length > 0) {
-                for (const v of resp_info.vervangers) {
-                    if (v.lesuur in this.vervangers)
-                        this.vervangers[v.lesuur].push(v.vervanger);
-                    else
-                        this.vervangers[v.lesuur] = [v.vervanger];
-                }
-            }
-            // sort and remove double entries in the list of vervangers
-            for (const [l, v] of Object.entries(this.vervangers)) this.vervangers[l] = [...new Set(v.sort())]
-
             if (this.local_storage)
                 this.draw(this.local_storage.info);
             else
@@ -398,7 +389,7 @@ class Info {
         let info_add = []
         let info_update = []
         for (const row of rows) {
-            let item = {school: global_data.school, datum: `${date}`};
+            let item = {};
             const columns = row.querySelectorAll("[data-field]");
             for (const column of columns) {
                 const field = column.dataset.field;
@@ -410,7 +401,7 @@ class Info {
                     }
                     item[field] = value;
                 } else
-                    item[field] = column.value
+                    item[field] = this.field_value(column)
             }
             if (item.lesuur > 0)
                 if (row.dataset.id <= -1) {
@@ -421,15 +412,15 @@ class Info {
                 }
         }
         if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date_select.value});
-        if (info_update.length > 0) await fetch_update("infobord.infobord", info_update, {school: global_data.school, datum: info_date_select.value});
+        if (info_update.length > 0) await fetch_update("infobord.infobord", info_update);
         if (this.info_delete.length > 0) await fetch_delete("infobord.infobord", {ids: this.info_delete.join(",")});
         const [location, lesuur] = this.extra_info.location_get().split("-");
-        const extra_info_data = {lesuur: parseInt(lesuur), location, info: this.extra_info.content_get(), school: global_data.school, datum: `${date}`};
+        const extra_info_data = {lesuur: parseInt(lesuur), location, info: this.extra_info.content_get()};
         if (this.extra_info.id_get() === "-1") {
-            await fetch_post("infobord.extrainfo", extra_info_data, {school: global_data.school});
+            await fetch_post("infobord.extrainfo", extra_info_data, {school: global_data.school, datum: date});
         } else {
             extra_info_data.id = this.extra_info.id_get();
-            await fetch_update("infobord.extrainfo", extra_info_data, {school: global_data.school});
+            await fetch_update("infobord.extrainfo", extra_info_data);
         }
         this.info_save_btn.classList.remove("blink-button");
         localStorage.removeItem(`${global_data.school}-info-data`);
@@ -453,7 +444,7 @@ class Info {
         const rows = Info.info_table_tbl.querySelectorAll('[data-id]');
         let data = []
         for (const row of rows) {
-            let item = {school: global_data.school, id: row.dataset.id};
+            let item = {id: row.dataset.id};
             const columns = row.querySelectorAll("[data-field]");
             for (const column of columns) {
                 const field = column.dataset.field;
@@ -466,7 +457,7 @@ class Info {
                     }
                     item[field] = value;
                 } else
-                    item[field] = column.value
+                    item[field] = this.field_value(column)
             }
             if (item.lesuur > 0) data.push(item);
         }
@@ -606,8 +597,8 @@ const __save_roepnaam = async (ids) => {
     await fetch_update("infobord.staff", {id: code2staff[code].id, roepnaam})
 }
 
-const __row_to_item = (row, datum) => {
-    const item = {school: global_data.school, datum};
+const __row_to_item = (row) => {
+    const item = {};
     for (const field of meta.school_info.fields) {
         const column = row.querySelector(`[data-field=${field}]`);
         if (!column) continue;
@@ -664,15 +655,16 @@ const __copy_row_weekly = async (ids) => {
         bootbox.alert("Kies een datum minstens 1 week later op dezelfde weekdag.");
         return;
     }
-    const data = [];
+    let copy_count = 0;
     const copy_date = new Date(source_date);
     copy_date.setDate(copy_date.getDate() + 7);
     while (copy_date <= end_date) {
-        data.push(__row_to_item(row, __format_date(copy_date)));
+        const datum = __format_date(copy_date);
+        await fetch_post("infobord.infobord", [__row_to_item(row)], {school: global_data.school, datum});
+        copy_count++;
         copy_date.setDate(copy_date.getDate() + 7);
     }
-    await fetch_post("infobord.infobord", data, {school: global_data.school, datum: info_date_select.value});
-    bootbox.alert(`${data.length} lijn(en) gekopieerd.`);
+    bootbox.alert(`${copy_count} lijn(en) gekopieerd.`);
 }
 
 const __get_row_id = (event) => {

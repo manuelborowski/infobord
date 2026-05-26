@@ -20,21 +20,17 @@ def edit():
 @bp_infobord.route('/infobord', methods=['GET', "POST", "DELETE", "UPDATE"])
 @login_required
 def infobord():
-    school = request.args.get("school")
-    datum = request.args.get("datum")
     if request.method == "GET":
-        # For a given day, go 4 weeks back, each time the same day and store in old-infos.  This is used to select the vervangers from
-        week_old_infos = []
-        for i in range(1, 4):
-            date = datetime.datetime.strptime(datum, "%Y-%m-%d") - datetime.timedelta(days= 7 * i)
-            week_old_infos += dl.infobord.get_m([("school", "=", school), ("datum", "=", date.strftime("%Y-%m-%d"))])
-        week_old_infos = [i.to_dict() for i in week_old_infos]
+        school = request.args.get("school")
+        datum = request.args.get("datum")
         infos = dl.infobord.get_m([("school", "=", school), ("datum", "=", datum)], order_by=["lesuur", "klas"])
         infos = [i.to_dict() for i in infos]
-        return {"data": infos, "vervangers": week_old_infos}
+        return {"data": infos}
     if request.method == "POST":
+        school = request.args.get("school")
+        datum = request.args.get("datum")
         data = json.loads(request.data)
-        al.infobord.add(data)
+        al.infobord.add(data, school, datum)
     if request.method == "UPDATE":
         data = json.loads(request.data)
         al.infobord.update(data)
@@ -71,13 +67,17 @@ def view():
 @bp_infobord.route('/extrainfo', methods=['GET', "POST", "UPDATE"])
 @login_required
 def extrainfo():
-    school = request.args.get("school")
-    datum = request.args.get("datum")
     if request.method in ["GET"]:
+        school = request.args.get("school")
+        datum = request.args.get("datum")
         extra_info = dl.extra_info.get([("school", "=", school), ("datum", "=", datum)])
         return {"data": extra_info.to_dict() if extra_info else None}
     if request.method == "POST":
+        school = request.args.get("school")
+        datum = request.args.get("datum")
         data = json.loads(request.data)
+        data["school"] = school
+        data["datum"] = datum
         dl.extra_info.add(data)
     if request.method == "UPDATE":
         data = json.loads(request.data)
