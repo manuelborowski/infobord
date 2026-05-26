@@ -73,31 +73,41 @@ def _additional_receiver_codes(value):
         log.error(f'{sys._getframe().f_code.co_name}: invalid YAML, {e}')
         return []
 
+# klas is a string with one or more klassen, seperated by a comma.  Return as list of tokens
+# in case of sul, a token can be a klas (5B MtWesport) or a complete klasgroep (5D)
 def _get_klas_tokens(klas):
     tokens = set()
-    for part in re.split(r";+", klas or ""):
-        part = part.strip()
-        if not part:
+    for klascode in re.split(r",+", klas or ""):
+        klascode = klascode.strip()
+        if not klascode or klascode == "-":
             continue
-        pieces = part.split(" ", 1)
-        if len(pieces) == 1:
-            tokens.add(pieces[0].strip())
-            continue
-        klasgroep, klassen = pieces
-        for klascode in re.split(r",+", klassen):
-            klascode = klascode.strip()
-            if klascode:
-                tokens.add(klascode)
+        tokens.add(klascode)
     return tokens
 
-def _students_for_klas(klas):
+def _student_school(student):
+    first = student.klascode[:1].upper()
+    instellingsnummer = student.instellingsnummer
+    if instellingsnummer in ["30569", "30593"] and first in ["1", "2"]:
+        return "sum"
+    if instellingsnummer == "30593" and first in ["3", "4", "5", "6", "O"]:
+        return "sul"
+    if instellingsnummer == "30569" and first in ["3", "4", "5", "6"]:
+        return "sui"
+    return None
+
+def _student_matches_school(student, school):
+    return _student_school(student) == school
+
+def _students_for_klas(klas, school):
     tokens = _get_klas_tokens(klas)
     students = []
     seen = set()
+    school_students = [student for student in dl.student.get_m() if _student_matches_school(student, school)]
     for token in tokens:
-        token_students = dl.student.get_m([("klascode", "=", token)])
+        token_students = [student for student in school_students if student.klascode == token]
         if not token_students:
-            token_students = [student for student in dl.student.get_m() if student.klascode.startswith(token)]
+            # probably a sul klasgroep (e.g. 4A)
+            token_students = [student for student in school_students if student.klascode.startswith(token)]
         for student in token_students:
             if student.leerlingnummer not in seen:
                 students.append(student)
@@ -145,7 +155,7 @@ def send_smartschool_message(infobord_id):
             body_template = dl.settings.get_configuration_setting("smartschool-message-body")
             additional_receivers = _staff_receivers(_additional_receiver_codes(dl.settings.get_configuration_setting("smartschool-message-additional-receivers")))
             enable_sending = dl.settings.get_configuration_setting("smartschool-message-enable-sending")
-            students = _students_for_klas(info.klas)
+            students = _students_for_klas(info.klas, info.school)
             sender = "csu"
             sent = 0
             for student in students:

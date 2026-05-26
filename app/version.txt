@@ -58,3 +58,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.52: bugfix recent-update and send-message buttons, add parameter "school"
 0.53: bugfixed add/update.  Clean up/made consistent the school/datum parameters
 0.54: table students, clean up
+0.55: send ss message, bugfix the parsing of info.klas to the real klassen and klasgroepen
