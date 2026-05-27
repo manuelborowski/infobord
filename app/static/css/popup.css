@@ -56,3 +56,30 @@
     padding-right: 20px;
 }
 
+.smartschool-message-compose {
+    text-align: left;
+}
+
+.smartschool-message-compose section {
+    margin-bottom: 12px;
+}
+
+.smartschool-message-compose ul {
+    margin-bottom: 0;
+}
+
+.smartschool-message-compose label {
+    display: block;
+    font-weight: 600;
+    margin-top: 12px;
+}
+
+.smartschool-message-body-editor {
+    min-height: 260px;
+}
+
+.smartschool-message-variables {
+    margin-top: 12px;
+    font-size: 0.9rem;
+}
+

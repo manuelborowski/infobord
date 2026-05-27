@@ -9,6 +9,30 @@ from app import MyLogFilter, top_log_handle, app
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
+MESSAGE_TYPE_NONE = "geen"
+MESSAGE_TYPE_AT_HOME = "at-home"
+MESSAGE_TYPE_TO_HOME = "to-home"
+
+MESSAGE_SETTINGS = {
+    MESSAGE_TYPE_AT_HOME: {
+        "title": "smartschool-message-title-at-home",
+        "body": "smartschool-message-body-at-home",
+    },
+    MESSAGE_TYPE_TO_HOME: {
+        "title": "smartschool-message-title-to-home",
+        "body": "smartschool-message-body-to-home",
+    },
+}
+
+MESSAGE_VARIABLES = [
+    "%%NAAM%%", "%%VOORNAAM%%", "%%ROEPNAAM%%", "%%KLAS%%", "%%KLASLIJST%%", "%%LEERLINGNUMMER%%", "%%DATUM%%",
+    "%%LESUUR%%", "%%LEERKRACHT%%", "%%VERVANGER%%", "%%LOCATIE%%", "%%STAMLOKAAL%%", "%%INFO%%", "%%EXTRA%%",
+]
+MESSAGE_TEMPLATE_TAGS = [
+    "<< tekst alleen voor leerlingen >>",
+    "{{ tekst alleen voor extra ontvangers }}",
+]
+
 def _mark_recent_updates(data, school, datum):
     try:
         if data:
@@ -40,21 +64,35 @@ def add(data, school, datum):
 
 def update(data):
     try:
-        # send-ss-message specific, when "bericht" is set for the first time, send a message to
+        # send-ss-message specific, when "bericht" is set, send a message to
         # the students and additional receivers (staff)
         message_jobs = []
         for item in data:
-            if "id" not in item or "bericht" not in item or item["bericht"] is not True:
+            if "id" not in item or "bericht" not in item or item["bericht"] not in MESSAGE_SETTINGS:
                 continue
             current = dl.infobord.get([("id", "=", item["id"])])
-            if current and not current.bericht:
-                message_jobs.append(current.id)
+            if current and current.bericht != item["bericht"]:
+                klas = item["klas"] if "klas" in item else current.klas
+                school = item["school"] if "school" in item else current.school
+                students, error_msg = _students_for_klas(klas, school)
+                if error_msg:
+                    return {"status": "error", "msg": f"{error_msg}. <br>Pas de klassen aan en probeer opnieuw."}
+                message_jobs.append({
+                    "infobord_id": current.id,
+                    "message_type": item["bericht"],
+                    "subject_template": item.get("message_title"),
+                    "body_template": item.get("message_body"),
+                    "students": students,
+                })
+            item.pop("message_title", None)
+            item.pop("message_body", None)
         ret = dl.infobord.update_m(data)
-        for infobord_id in message_jobs:
-            socketio.start_background_task(send_smartschool_message, infobord_id)
-        return ret
+        for job in message_jobs:
+            socketio.start_background_task(send_smartschool_message, **job)
+        return ret or {}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": "error", "msg": str(e)}
 
 def _additional_receiver_codes(value):
     try:
@@ -102,25 +140,44 @@ def _students_for_klas(klas, school):
     tokens = _get_klas_tokens(klas)
     students = []
     seen = set()
+    missing_tokens = []
     school_students = [student for student in dl.student.get_m() if _student_matches_school(student, school)]
     for token in tokens:
         token_students = [student for student in school_students if student.klascode == token]
         if not token_students:
             # probably a sul klasgroep (e.g. 4A)
             token_students = [student for student in school_students if student.klascode.startswith(token)]
+        if not token_students:
+            missing_tokens.append(token)
+            continue
         for student in token_students:
             if student.leerlingnummer not in seen:
-                students.append(student)
+                students.append(student.to_dict())
                 seen.add(student.leerlingnummer)
-    return students
+    if missing_tokens:
+        log.error(f"{sys._getframe().f_code.co_name}: Non existing class(es): {(missing_classes := ', '.join(sorted(missing_tokens)))}")
+        return [], f"Smartschool bericht niet verzonden: klas(sen) niet gevonden: {missing_classes}"
+    return students, None
 
 def _replace_message_tags(template, student, info):
+    template = template or ""
+
+    def student_value(name, default=""):
+        if not student:
+            return default
+        if isinstance(student, dict):
+            return student.get(name, default)
+        return getattr(student, name, default)
+
+    template = re.sub(r"(?:<<|&lt;&lt;)\s*(.*?)\s*(?:>>|&gt;&gt;)", r"\1" if student else "", template, flags=re.DOTALL)
+    template = re.sub(r"{{\s*(.*?)\s*}}", "" if student else r"\1", template, flags=re.DOTALL)
     tags = {
-        "%%NAAM%%": student.naam if student else "",
-        "%%VOORNAAM%%": student.voornaam if student else "",
-        "%%ROEPNAAM%%": student.roepnaam if student else "",
-        "%%KLAS%%": student.klascode if student else info.klas,
-        "%%LEERLINGNUMMER%%": student.leerlingnummer if student else "",
+        "%%NAAM%%": student_value("naam"),
+        "%%VOORNAAM%%": student_value("voornaam"),
+        "%%ROEPNAAM%%": student_value("roepnaam"),
+        "%%KLAS%%": student_value("klascode", info.klas),
+        "%%KLASLIJST%%": info.klas,
+        "%%LEERLINGNUMMER%%": student_value("leerlingnummer"),
         "%%DATUM%%": info.datum,
         "%%LESUUR%%": str(info.lesuur),
         "%%LEERKRACHT%%": info.leerkracht,
@@ -144,24 +201,59 @@ def _staff_receivers(codes):
             log.error(f'{sys._getframe().f_code.co_name}: could not find Smartschool internal number for staff code {code}')
     return receivers
 
-def send_smartschool_message(infobord_id):
+def _message_templates(message_type):
+    settings = MESSAGE_SETTINGS.get(message_type, MESSAGE_SETTINGS[MESSAGE_TYPE_AT_HOME])
+    return (
+        dl.settings.get_configuration_setting(settings["title"]),
+        dl.settings.get_configuration_setting(settings["body"]),
+    )
+
+def smartschool_message_meta():
+    additional_receiver_codes = _additional_receiver_codes(dl.settings.get_configuration_setting("smartschool-message-additional-receivers"))
+    return {
+        "additional_receivers": additional_receiver_codes,
+        "variables": MESSAGE_VARIABLES,
+        "template_tags": MESSAGE_TEMPLATE_TAGS,
+        "templates": {
+            MESSAGE_TYPE_AT_HOME: {
+                "title": dl.settings.get_configuration_setting("smartschool-message-title-at-home"),
+                "body": dl.settings.get_configuration_setting("smartschool-message-body-at-home"),
+            },
+            MESSAGE_TYPE_TO_HOME: {
+                "title": dl.settings.get_configuration_setting("smartschool-message-title-to-home"),
+                "body": dl.settings.get_configuration_setting("smartschool-message-body-to-home"),
+            },
+        }
+    }
+
+def send_smartschool_message(infobord_id, message_type=None, subject_template=None, body_template=None, students=None):
     with app.app_context():
         try:
             info = dl.infobord.get([("id", "=", infobord_id)])
             if not info:
                 log.error(f'{sys._getframe().f_code.co_name}: could not find infobord row {infobord_id}')
                 return
-            subject_template = dl.settings.get_configuration_setting("smartschool-message-title-at-home")
-            body_template = dl.settings.get_configuration_setting("smartschool-message-body-at-home")
+            if not message_type:
+                message_type = info.bericht if info.bericht in MESSAGE_SETTINGS else MESSAGE_TYPE_AT_HOME
+            if subject_template is None or body_template is None:
+                default_subject_template, default_body_template = _message_templates(message_type)
+                subject_template = default_subject_template if subject_template is None else subject_template
+                body_template = default_body_template if body_template is None else body_template
             additional_receivers = _staff_receivers(_additional_receiver_codes(dl.settings.get_configuration_setting("smartschool-message-additional-receivers")))
             enable_sending = dl.settings.get_configuration_setting("smartschool-message-enable-sending")
-            students = _students_for_klas(info.klas, info.school)
+            if students is None:
+                students, error_msg = _students_for_klas(info.klas, info.school)
+                if error_msg:
+                    log.error(f'{sys._getframe().f_code.co_name}: {error_msg}, infobord {infobord_id}, klas {info.klas}')
+                    return
             sender = "csu"
             sent = 0
             for student in students:
                 subject = _replace_message_tags(subject_template, student, info)
                 body = _replace_message_tags(body_template, student, info)
-                ss_send_message(student.leerlingnummer, sender, subject, body, 0, enable_sending, f", {student.klascode}")
+                leerlingnummer = student["leerlingnummer"] if isinstance(student, dict) else student.leerlingnummer
+                klascode = student["klascode"] if isinstance(student, dict) else student.klascode
+                ss_send_message(leerlingnummer, sender, subject, body, 0, enable_sending, f", {klascode}")
                 sent += 1
             subject = _replace_message_tags(subject_template, None, info)
             body = _replace_message_tags(body_template, None, info)

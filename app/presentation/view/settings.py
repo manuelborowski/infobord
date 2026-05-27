@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from app import admin_required, supervisor_required, data as dl, application as al
 from app.presentation.view import fetch_return_error
 from app.application import cron_table
+import html
 import json, sys
 
 # logging on file level
@@ -75,6 +76,8 @@ def _filter_template_for_current_user(template):
     return filtered
 
 def _settings_template():
+    smartschool_message_variables = ", ".join(al.infobord.MESSAGE_VARIABLES)
+    smartschool_message_tags = html.escape(", ".join(al.infobord.MESSAGE_TEMPLATE_TAGS))
     cron_enable_modules = dl.settings.get_configuration_setting('cron-enable-modules') if _can_access_setting('cron-enable-modules') else {}
     cron_modules_template = [
         {
@@ -127,7 +130,7 @@ def _settings_template():
                         },
                         {"label": "Extra ontvangers (YAML lijst met personeelscodes)", "name": "smartschool-message-additional-receivers", "type": "textarea"},
                         [{"label": "Smartschool berichten effectief verzenden?", "name": "smartschool-message-enable-sending", "type": "check"}],
-                        {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": "Extra ontvangers voorbeeld:<br>- boro<br>- ABC<br># commentaar<br><br>Beschikbare variabelen: %%NAAM%%, %%VOORNAAM%%, %%ROEPNAAM%%, %%KLAS%%, %%LEERLINGNUMMER%%, %%DATUM%%, %%LESUUR%%, %%LEERKRACHT%%, %%VERVANGER%%, %%LOCATIE%%, %%STAMLOKAAL%%, %%INFO%%, %%EXTRA%%"},
+                        {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": f"Extra ontvangers voorbeeld:<br>- boro<br>- ABC<br># commentaar<br><br>Beschikbare variabelen: {smartschool_message_variables}<br><br>Beschikbare tags: {smartschool_message_tags}"},
                     ]
                 },
                 {

@@ -33,7 +33,7 @@ def infobord():
         al.infobord.add(data, school, datum)
     if request.method == "UPDATE":
         data = json.loads(request.data)
-        al.infobord.update(data)
+        return json.dumps(al.infobord.update(data) or {})
     if request.method == "DELETE":
         data = request.args.get("ids").split(",")
         dl.infobord.delete_m(ids=data)
@@ -102,6 +102,7 @@ def meta():
         "field_info": field_info,
         "staff": staff,
         "klasgroepen": al.infobord.get_klasgroepen(school),
+        "smartschool_message": al.infobord.smartschool_message_meta(),
     })
 
 @bp_infobord.route('/infobord/schedule', methods=['GET'])

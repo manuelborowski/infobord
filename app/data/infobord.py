@@ -24,7 +24,7 @@ class Infobord(db.Model, SerializerMixin):
     datum = db.Column(db.String(256), default='')
     staff = db.Column(db.String(256), default='')
     remark = db.Column(db.String(1000), default='')
-    bericht = db.Column(db.Boolean, default=False)
+    bericht = db.Column(db.String(32), default='geen')
     recent_update = db.Column(db.Boolean, default=False)
 
     active = db.Column(db.Boolean, default=True)    # long term

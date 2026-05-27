@@ -101,6 +101,108 @@ class ExtraInfo {
 
 class Info {
     static info_table_tbl = document.getElementById("info-table");
+    static message_type_labels = {
+        "geen": "Geen",
+        "at-home": "Thuis",
+        "to-home": "Naar Huis",
+    }
+
+    static normalize_bericht = value => {
+        if (value === true || value === "true") return "at-home";
+        if (value === false || value === "false" || value === null || value === "") return "geen";
+        return value in Info.message_type_labels ? value : "geen";
+    }
+
+    static split_klassen = klas => (klas || "").split(",").map(k => k.trim()).filter(k => k !== "");
+
+    static append_list = (parent, items) => {
+        const ul = document.createElement("ul");
+        parent.appendChild(ul);
+        if (items.length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "-";
+            ul.appendChild(li);
+        }
+        for (const item of items) {
+            const li = document.createElement("li");
+            li.textContent = item;
+            ul.appendChild(li);
+        }
+    }
+
+    static prompt_smartschool_message = ({message_type, klas}) => {
+        const settings = meta.smartschool_message || {};
+        const template = settings.templates?.[message_type] || {title: "", body: ""};
+        const popup = document.createElement("div");
+        popup.classList.add("smartschool-message-compose");
+
+        const klas_section = document.createElement("section");
+        popup.appendChild(klas_section);
+        const klas_title = document.createElement("h5");
+        klas_title.textContent = "Klassen";
+        klas_section.appendChild(klas_title);
+        Info.append_list(klas_section, Info.split_klassen(klas));
+
+        const receivers_section = document.createElement("section");
+        popup.appendChild(receivers_section);
+        const receivers_title = document.createElement("h5");
+        receivers_title.textContent = "Extra ontvangers";
+        receivers_section.appendChild(receivers_title);
+        Info.append_list(receivers_section, settings.additional_receivers || []);
+
+        const title_label = document.createElement("label");
+        title_label.textContent = "Onderwerp";
+        popup.appendChild(title_label);
+        const title_input = document.createElement("input");
+        title_input.classList.add("form-control");
+        title_input.value = template.title || "";
+        popup.appendChild(title_input);
+
+        const body_label = document.createElement("label");
+        body_label.textContent = "Bericht";
+        popup.appendChild(body_label);
+        const body_editor = document.createElement("div");
+        body_editor.classList.add("smartschool-message-body-editor");
+        popup.appendChild(body_editor);
+
+        const variables = document.createElement("p");
+        variables.classList.add("smartschool-message-variables");
+        variables.textContent = `Mogelijke variabelen: ${(settings.variables || []).join(", ")}`;
+        popup.appendChild(variables);
+        const template_tags = document.createElement("p");
+        template_tags.classList.add("smartschool-message-variables");
+        template_tags.textContent = `Mogelijke tags: ${(settings.template_tags || []).join(", ")}`;
+        popup.appendChild(template_tags);
+
+        return new Promise(resolve => {
+            let quill = null;
+            const initialise_body_editor = () => {
+                if (quill) return;
+                quill = new Quill(body_editor, {theme: "snow"});
+                quill.clipboard.dangerouslyPasteHTML(template.body || "");
+            }
+            const dialog = bootbox.dialog({
+                title: `Smartschool bericht: ${Info.message_type_labels[message_type]}`,
+                message: popup,
+                size: "xl",
+                className: "smartschool-message-dialog",
+                buttons: {
+                    cancel: {
+                        label: "Annuleer",
+                        className: "btn-secondary",
+                        callback: () => resolve(null)
+                    },
+                    send: {
+                        label: "Verzenden",
+                        className: "btn-success",
+                        callback: () => resolve({title: title_input.value, body: quill ? quill.root.innerHTML : template.body || ""})
+                    }
+                }
+            });
+            dialog.on("shown.bs.modal", initialise_body_editor);
+            setTimeout(initialise_body_editor, 0);
+        });
+    }
 
     constructor(info_save_btn) {
         this.info_save_btn = info_save_btn;
@@ -159,8 +261,10 @@ class Info {
                     const select = document.createElement("select")
                     td.appendChild(select);
                     select.dataset.field = "bericht";
-                    [[false, "Neen"], [true, "Ja"]].forEach(([value, label]) => {select.add(new Option(label, value, value === item[field], value === item[field]))});
-                    __color_cell(td, item[field] ? "yellow" : "");
+                    item[field] = Info.normalize_bericht(item[field]);
+                    tr.dataset.berichtValue = item[field];
+                    Object.entries(Info.message_type_labels).forEach(([value, label]) => {select.add(new Option(label, value, value === item[field], value === item[field]))});
+                    __color_cell(td, item[field] !== "geen" ? "yellow" : "");
                     if ("cb" in column && column.cb in string2cb) select.addEventListener("change", string2cb[column.cb]);
                 } else if (column.source === "recent_update" && item.id > 0) { // consider valid entries only
                     const div = document.createElement("div");
@@ -214,12 +318,40 @@ class Info {
             this.info_save_btn.classList.add("blink-button");
         }
 
-        const __message_sent = async e => {
-            const value = e.target.value;
+        const __message_send = async e => {
+            const value = Info.normalize_bericht(e.target.value);
             const row = e.target.closest("tr");
             const message_sent = row.querySelector("[data-field=bericht]");
-            await fetch_update("infobord.infobord", [{id: row.dataset.id, bericht: message_sent.value === "true"}]);
-            __color_cell(e.target.closest("td"), message_sent.value === "true" ? "yellow" : "");
+            const previous_value = Info.normalize_bericht(row.dataset.berichtValue);
+            if (value === previous_value) return;
+
+            let data = {id: row.dataset.id, bericht: value};
+            row.querySelectorAll("[data-field]").forEach(column => {
+                const field = column.dataset.field;
+                if (field === "bericht") {
+                    data[field] = value;
+                } else if (column.dataset.type === "int") {
+                    data[field] = parseInt(column.value);
+                } else {
+                    data[field] = this.field_value(column);
+                }
+            });
+            if (value !== "geen") {
+                const popup_data = await Info.prompt_smartschool_message({message_type: value, klas: row.querySelector("[data-field=klas]")?.value || ""});
+                if (!popup_data) {
+                    message_sent.value = previous_value;
+                    return;
+                }
+                data = {...data, message_title: popup_data.title, message_body: popup_data.body};
+            }
+
+            const response = await fetch_update("infobord.infobord", [data]);
+            if (response === null) {
+                await this.load();
+                return;
+            }
+            row.dataset.berichtValue = value;
+            __color_cell(e.target.closest("td"), value !== "geen" ? "yellow" : "");
         }
 
         const __recent_update_changed = async e => {
@@ -232,7 +364,7 @@ class Info {
 
         const string2cb = {
             vervanger_changed: __vervanger_changed,
-            message_sent: __message_sent,
+            message_sent: __message_send,
             recent_update: __recent_update_changed,
         }
 
@@ -412,7 +544,10 @@ class Info {
                 }
         }
         if (info_add.length > 0) await fetch_post("infobord.infobord", info_add, {school: global_data.school, datum: info_date_select.value});
-        if (info_update.length > 0) await fetch_update("infobord.infobord", info_update);
+        if (info_update.length > 0) {
+            const response = await fetch_update("infobord.infobord", info_update);
+            if (response === null) return;
+        }
         if (this.info_delete.length > 0) await fetch_delete("infobord.infobord", {ids: this.info_delete.join(",")});
         const [location, lesuur] = this.extra_info.location_get().split("-");
         const extra_info_data = {lesuur: parseInt(lesuur), location, info: this.extra_info.content_get()};
