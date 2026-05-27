@@ -61,3 +61,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.55: send ss message, bugfix the parsing of info.klas to the real klassen and klasgroepen
 0.56: settings menu, show items depending on user level, e.g. level 3 has access to less items than level 5
 0.57: added messages for at-home and to-home
+0.58: additional receives will always receive the message, independant of enable-sending

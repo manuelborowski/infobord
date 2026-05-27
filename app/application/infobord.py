@@ -166,8 +166,7 @@ def send_smartschool_message(infobord_id):
             subject = _replace_message_tags(subject_template, None, info)
             body = _replace_message_tags(body_template, None, info)
             for receiver in additional_receivers:
-                receiver_enable_sending = True if receiver["code"].lower() == "boro" else enable_sending
-                ss_send_message(receiver["ss_internal_nbr"], sender, subject, body, 0, receiver_enable_sending)
+                ss_send_message(receiver["ss_internal_nbr"], sender, subject, body, 0, True)
                 sent += 1
             log.info(f'{sys._getframe().f_code.co_name}: Smartschool message for infobord {infobord_id}, klas {info.klas}, sent {sent}, enable_sending {enable_sending}')
         except Exception as e:
