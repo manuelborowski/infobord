@@ -9,6 +9,7 @@
 //        {tag: "link", href: "static/css/form.css", rel: "stylesheet"},
 
 // Container, contains a header with the name and can be collapsible
+// level: if present, the element is only shown when current_user.level is equal or higher
 // save:  If true, a save button is added at the top of the container
 // default_collapsed:  If present, the container is collapsible.  If present and true, the container is default closed
 // rows: sub containers of elements
@@ -43,13 +44,14 @@ export class BForms {
     id2element = {}
     typecasts = []
     quill_editors = {}
+    current_user_level = typeof current_user === "undefined" ? 0 : current_user.level || 0
 
     constructor(template) {
         this.form = document.createElement("form");
         this.add(this.form, template)
     }
 
-    // If Quill is used, ensure a link to the css is inserted once
+    // If Quill is used, ensure a link to the quill-css is inserted once
     ensure_quill_css = () => {
         const href = "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css";
         if (!document.querySelector(`link[href="${href}"]`)) {
@@ -60,10 +62,30 @@ export class BForms {
         }
     }
 
+    has_access = component => !("level" in component) || this.current_user_level >= component.level
+
+    filter_template_by_level = template => {
+        if (Array.isArray(template)) {
+            // Go one level deeper (recurse).  If an item is not to be displayed, return null, which is filtered out with the filter(Boolean)
+            const filtered_items = template.map(this.filter_template_by_level).filter(Boolean);
+            return filtered_items.length > 0 ? filtered_items : null;
+        }
+        if (!this.has_access(template)) return null;
+        if ("rows" in template) {
+            const filtered_rows = template.rows.map(this.filter_template_by_level).filter(Boolean);
+            // Recreate the template with its valid/filtered rows and return, if applicable
+            return filtered_rows.length > 0 ? {...template, rows: filtered_rows} : null;
+        }
+        return template;
+    }
+
     // add a template to the form
     // parent: html element to which the rendered template is attachted to
     // template: structure defining the html elemeents of the form
     add = (parent, template) => {
+        template = this.filter_template_by_level(template);
+        if (!template) return;
+
         let container_level = 0;
         let format = null;
 
@@ -213,7 +235,9 @@ export class BForms {
 
         for (const row of template) __iterate_template(row, parent);
 
-        document.querySelectorAll(".form-container-collapsible").forEach(c => {
+        parent.querySelectorAll(".form-container-collapsible").forEach(c => {
+            if (c.dataset.collapsibleHandler) return;
+            c.dataset.collapsibleHandler = "true";
             c.addEventListener("click", e => {
                 e.target.classList.toggle("active");
                 const content = e.target.nextElementSibling;

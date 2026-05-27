@@ -1,11 +1,12 @@
 import {ButtonMenu} from "./common/button_menu.js";
 
+// defines the user level required to display a menu item
 var menu = [
     ["infobord.edit", "SUM", 1, {"school": "sum"}],
     ["infobord.edit", "SUL", 1, {"school": "sul"}],
     ["infobord.edit", "SUI", 1, {"school": "sui"}],
     ["user.show", "Gebruikers", 5],
-    ["settings.show", "Instellingen", 5],
+    ["settings.show", "Instellingen", 3], // settings.js has additional levels to control the visibility of specific items
 ]
 
 export const inject_menu = new_menu => {
@@ -78,4 +79,3 @@ export const base_init = ({button_menu_items=[]}) => {
     }
     const button_menu = new ButtonMenu(document.querySelector(".button-menu-placeholder"), button_menu_items);
 }
-
