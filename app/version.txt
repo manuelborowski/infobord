@@ -63,3 +63,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.57: added messages for at-home and to-home
 0.58: additional receives will always receive the message, independant of enable-sending
 0.59: sending a message, split up in "to-home" and "at-home".  Show popup with template so that it can be updated.
+0.60 when copying a row into the future, reset some fields

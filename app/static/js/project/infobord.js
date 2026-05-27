@@ -749,6 +749,14 @@ const __row_to_item = (row) => {
     return item;
 }
 
+const __row_to_copied_item = (row) => {
+    const item = __row_to_item(row);
+    item.bericht = "geen";
+    item.recent_update = false;
+    item.remark = "";
+    return item;
+}
+
 const __prompt_copy_until_date = () => {
     return new Promise(resolve => {
         bootbox.prompt({
@@ -795,7 +803,7 @@ const __copy_row_weekly = async (ids) => {
     copy_date.setDate(copy_date.getDate() + 7);
     while (copy_date <= end_date) {
         const datum = __format_date(copy_date);
-        await fetch_post("infobord.infobord", [__row_to_item(row)], {school: global_data.school, datum});
+        await fetch_post("infobord.infobord", [__row_to_copied_item(row)], {school: global_data.school, datum});
         copy_count++;
         copy_date.setDate(copy_date.getDate() + 7);
     }
