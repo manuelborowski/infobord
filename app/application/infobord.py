@@ -151,8 +151,8 @@ def send_smartschool_message(infobord_id):
             if not info:
                 log.error(f'{sys._getframe().f_code.co_name}: could not find infobord row {infobord_id}')
                 return
-            subject_template = dl.settings.get_configuration_setting("smartschool-message-title")
-            body_template = dl.settings.get_configuration_setting("smartschool-message-body")
+            subject_template = dl.settings.get_configuration_setting("smartschool-message-title-at-home")
+            body_template = dl.settings.get_configuration_setting("smartschool-message-body-at-home")
             additional_receivers = _staff_receivers(_additional_receiver_codes(dl.settings.get_configuration_setting("smartschool-message-additional-receivers")))
             enable_sending = dl.settings.get_configuration_setting("smartschool-message-enable-sending")
             students = _students_for_klas(info.klas, info.school)

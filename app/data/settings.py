@@ -89,8 +89,10 @@ default_configuration_settings = {
     'cron-scheduler-template': ('', Settings.SETTING_TYPE.E_STRING),
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),
 
-    'smartschool-message-title': ('', Settings.SETTING_TYPE.E_STRING),
-    'smartschool-message-body': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-title-at-home': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-body-at-home': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-title-to-home': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-body-to-home': ('', Settings.SETTING_TYPE.E_STRING),
     'smartschool-message-additional-receivers': ('', Settings.SETTING_TYPE.E_YAML),
     'smartschool-message-enable-sending': (True, Settings.SETTING_TYPE.E_BOOL),
 
@@ -100,7 +102,6 @@ default_configuration_settings = {
     'field-configuration': ({}, Settings.SETTING_TYPE.E_YAML),
 
 }
-
 
 def get_configuration_settings(convert_to_string=False):
     configuration_settings = {}
@@ -123,10 +124,9 @@ def get_configuration_setting(setting, convert_to_string=False, user=None):
     found, value = get_setting(setting, user=user, convert_to_string=convert_to_string)
     if found:
         return value
-    else:
-        default_setting = default_configuration_settings[setting]
-        add_setting(setting, default_setting[0], default_setting[1], user=user)
-        return default_setting[0]
+    default_setting = default_configuration_settings[setting]
+    add_setting(setting, default_setting[0], default_setting[1], user=user)
+    return default_setting[0]
 
 
 setting_changed_cb = {}

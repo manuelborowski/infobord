@@ -21,8 +21,10 @@ setting_levels = {
     'generic-new-via-smartschool': 5,
     'cron-scheduler-template': 5,
     'cron-enable-modules': 5,
-    'smartschool-message-title': 3,
-    'smartschool-message-body': 3,
+    'smartschool-message-title-at-home': 3,
+    'smartschool-message-body-at-home': 3,
+    'smartschool-message-title-to-home': 3,
+    'smartschool-message-body-to-home': 3,
     'smartschool-message-additional-receivers': 3,
     'smartschool-message-enable-sending': 3,
     'user-datatables-template': 5,
@@ -111,8 +113,18 @@ def _settings_template():
                 },
                 {
                     "type": "container", "label": "Smartschool", "save": True, "default_collapsed": True, "rows": [
-                        [{"label": "Bericht onderwerp", "name": "smartschool-message-title", "type": "input"}],
-                        {"label": "Bericht inhoud", "name": "smartschool-message-body", "type": "quill", "editor_height": "220px"},
+                        {
+                            "type": "container", "label": "Bericht voor: Thuis", "save": True, "default_collapsed": True, "rows": [
+                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-at-home", "type": "input"}],
+                                {"label": "Bericht inhoud", "name": "smartschool-message-body-at-home", "type": "quill", "editor_height": "220px"},
+                            ]
+                        },
+                        {
+                            "type": "container", "label": "Bericht voor: Naar Huis", "save": True, "default_collapsed": True, "rows": [
+                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-to-home", "type": "input"}],
+                                {"label": "Bericht inhoud", "name": "smartschool-message-body-to-home", "type": "quill", "editor_height": "220px"},
+                            ]
+                        },
                         {"label": "Extra ontvangers (YAML lijst met personeelscodes)", "name": "smartschool-message-additional-receivers", "type": "textarea"},
                         [{"label": "Smartschool berichten effectief verzenden?", "name": "smartschool-message-enable-sending", "type": "check"}],
                         {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": "Extra ontvangers voorbeeld:<br>- boro<br>- ABC<br># commentaar<br><br>Beschikbare variabelen: %%NAAM%%, %%VOORNAAM%%, %%ROEPNAAM%%, %%KLAS%%, %%LEERLINGNUMMER%%, %%DATUM%%, %%LESUUR%%, %%LEERKRACHT%%, %%VERVANGER%%, %%LOCATIE%%, %%STAMLOKAAL%%, %%INFO%%, %%EXTRA%%"},
