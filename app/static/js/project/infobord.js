@@ -130,6 +130,14 @@ class Info {
         }
     }
 
+    static staff_name = code => {
+        const receiver_code = String(code || "").trim().toUpperCase();
+        const staff = (meta.staff || []).find(s => String(s.code || "").toUpperCase() === receiver_code);
+        if (!staff) return code;
+        if (staff.roepnaam && staff.roepnaam.trim()) return [staff.roepnaam, staff.naam].filter(Boolean).join(" ");
+        return [staff.voornaam, staff.naam].filter(Boolean).join(" ") || code;
+    }
+
     static prompt_smartschool_message = ({message_type, klas}) => {
         const settings = meta.smartschool_message || {};
         const template = settings.templates?.[message_type] || {title: "", body: ""};
@@ -148,7 +156,7 @@ class Info {
         const receivers_title = document.createElement("h5");
         receivers_title.textContent = "Extra ontvangers";
         receivers_section.appendChild(receivers_title);
-        Info.append_list(receivers_section, settings.additional_receivers || []);
+        Info.append_list(receivers_section, (settings.additional_receivers || []).map(Info.staff_name));
 
         const title_label = document.createElement("label");
         title_label.textContent = "Onderwerp";

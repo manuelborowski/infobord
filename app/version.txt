@@ -66,3 +66,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.60 when copying a row into the future, reset some fields
 0.61: ss message, when sending is disabled, attach copy of student-message to additional-receiver-message
 0.62: ss message, additional receivers per school
+0.63: message popup, additional receiver, show name iso code
