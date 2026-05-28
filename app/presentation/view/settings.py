@@ -128,9 +128,9 @@ def _settings_template():
                                 {"label": "Bericht inhoud", "name": "smartschool-message-body-to-home", "type": "quill", "editor_height": "220px"},
                             ]
                         },
-                        {"label": "Extra ontvangers (YAML lijst met personeelscodes)", "name": "smartschool-message-additional-receivers", "type": "textarea"},
+                        {"label": "Extra ontvangers (YAML per school)", "name": "smartschool-message-additional-receivers", "type": "textarea"},
                         [{"label": "Smartschool berichten effectief verzenden?", "name": "smartschool-message-enable-sending", "type": "check"}],
-                        {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": f"Extra ontvangers voorbeeld:<br>- boro<br>- ABC<br># commentaar<br><br>Beschikbare variabelen: {smartschool_message_variables}<br><br>Beschikbare tags: {smartschool_message_tags}"},
+                        {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": f"Extra ontvangers voorbeeld:<br>sum:<br>&nbsp;&nbsp;- boro<br>sul:<br>&nbsp;&nbsp;- boro<br>sui:<br>&nbsp;&nbsp;- boro<br># commentaar<br><br>Beschikbare variabelen: {smartschool_message_variables}<br><br>Beschikbare tags: {smartschool_message_tags}"},
                     ]
                 },
                 {

@@ -102,7 +102,7 @@ def meta():
         "field_info": field_info,
         "staff": staff,
         "klasgroepen": al.infobord.get_klasgroepen(school),
-        "smartschool_message": al.infobord.smartschool_message_meta(),
+        "smartschool_message": al.infobord.smartschool_message_meta(school),
     })
 
 @bp_infobord.route('/infobord/schedule', methods=['GET'])

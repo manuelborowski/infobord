@@ -51,6 +51,8 @@ def add_setting(name, value, type=Settings.SETTING_TYPE.E_STRING, user=None):
     try:
         if type == Settings.SETTING_TYPE.E_JSON:
             value = json.dumps(value)
+        elif type == Settings.SETTING_TYPE.E_YAML and not isinstance(value, str):
+            value = yaml.safe_dump(value, sort_keys=False, allow_unicode=True)
         setting = Settings(name=name, value=str(value), type=type, username=user)
         db.session.add(setting)
         db.session.commit()
@@ -73,6 +75,8 @@ def set_setting(name, value, user=None):
                     value = json.dumps(value)
                 else:
                     value = json.dumps(json.loads(value))
+            elif setting.type == Settings.SETTING_TYPE.E_YAML and not isinstance(value, str):
+                value = yaml.safe_dump(value, sort_keys=False, allow_unicode=True)
             setting.value = value
             db.session.commit()
     except Exception as e:
@@ -93,7 +97,7 @@ default_configuration_settings = {
     'smartschool-message-body-at-home': ('', Settings.SETTING_TYPE.E_STRING),
     'smartschool-message-title-to-home': ('', Settings.SETTING_TYPE.E_STRING),
     'smartschool-message-body-to-home': ('', Settings.SETTING_TYPE.E_STRING),
-    'smartschool-message-additional-receivers': ('', Settings.SETTING_TYPE.E_YAML),
+    'smartschool-message-additional-receivers': ({'sum': ['boro'], 'sul': ['boro'], 'sui': ['boro']}, Settings.SETTING_TYPE.E_YAML),
     'smartschool-message-enable-sending': (True, Settings.SETTING_TYPE.E_BOOL),
 
     'user-datatables-template': ({}, Settings.SETTING_TYPE.E_YAML),
@@ -126,6 +130,11 @@ def get_configuration_setting(setting, convert_to_string=False, user=None):
         return value
     default_setting = default_configuration_settings[setting]
     add_setting(setting, default_setting[0], default_setting[1], user=user)
+    if convert_to_string:
+        if default_setting[1] == Settings.SETTING_TYPE.E_YAML and not isinstance(default_setting[0], str):
+            return yaml.safe_dump(default_setting[0], sort_keys=False, allow_unicode=True)
+        if default_setting[1] == Settings.SETTING_TYPE.E_JSON:
+            return json.dumps(default_setting[0], indent=2)
     return default_setting[0]
 
 

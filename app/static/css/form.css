@@ -92,6 +92,10 @@ label.top {
     margin-left:10px;
 }
 
+.form-container-collapsible.collapsed {
+    margin-bottom: 8px;
+}
+
 .form-container-1 {
     background-color: #ffc109;
     color: #ffffff;

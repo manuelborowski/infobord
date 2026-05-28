@@ -1,6 +1,6 @@
 from app import data as dl, socketio
 from app.application.smartschool import send_message as ss_send_message
-import sys, datetime, re, yaml
+import sys, datetime, re
 
 #logging on file level
 import logging
@@ -93,23 +93,6 @@ def update(data):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": "error", "msg": str(e)}
-
-def _additional_receiver_codes(value):
-    try:
-        if isinstance(value, list):
-            codes = value
-        else:
-            parsed = yaml.safe_load(value or "")
-            if isinstance(parsed, list):
-                codes = parsed
-            elif parsed:
-                codes = re.split(r"[\n,;]+", str(parsed))
-            else:
-                codes = []
-        return [str(item).strip().upper() for item in codes if str(item).strip()]
-    except yaml.YAMLError as e:
-        log.error(f'{sys._getframe().f_code.co_name}: invalid YAML, {e}')
-        return []
 
 # klas is a string with one or more klassen, seperated by a comma.  Return as list of tokens
 # in case of sul, a token can be a klas (5B MtWesport) or a complete klasgroep (5D)
@@ -208,10 +191,11 @@ def _message_templates(message_type):
         dl.settings.get_configuration_setting(settings["body"]),
     )
 
-def smartschool_message_meta():
-    additional_receiver_codes = _additional_receiver_codes(dl.settings.get_configuration_setting("smartschool-message-additional-receivers"))
+def smartschool_message_meta(school=None):
+    additional_receivers = dl.settings.get_configuration_setting("smartschool-message-additional-receivers") or {}
     return {
-        "additional_receivers": additional_receiver_codes,
+        "additional_receivers": additional_receivers.get(school, []) if school else additional_receivers,
+        "additional_receivers_by_school": additional_receivers,
         "variables": MESSAGE_VARIABLES,
         "template_tags": MESSAGE_TEMPLATE_TAGS,
         "templates": {
@@ -239,7 +223,9 @@ def send_smartschool_message(infobord_id, message_type=None, subject_template=No
                 default_subject_template, default_body_template = _message_templates(message_type)
                 subject_template = default_subject_template if subject_template is None else subject_template
                 body_template = default_body_template if body_template is None else body_template
-            additional_receivers = _staff_receivers(_additional_receiver_codes(dl.settings.get_configuration_setting("smartschool-message-additional-receivers")))
+            additional_receivers_setting = dl.settings.get_configuration_setting("smartschool-message-additional-receivers") or {}
+            additional_receiver_codes = [code.strip().upper() for code in additional_receivers_setting.get(info.school, []) if code.strip()]
+            additional_receivers = _staff_receivers(additional_receiver_codes)
             enable_sending = dl.settings.get_configuration_setting("smartschool-message-enable-sending")
             if students is None:
                 students, error_msg = _students_for_klas(info.klas, info.school)

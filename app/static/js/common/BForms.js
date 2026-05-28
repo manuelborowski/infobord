@@ -131,7 +131,10 @@ export class BForms {
                 content.classList.add("content");
                 if ("default_collapsed" in component) {
                     button.classList.add("form-container-collapsible");
-                    if (component.default_collapsed) content.style.display = "none";
+                    if (component.default_collapsed) {
+                        content.style.display = "none";
+                        button.classList.add("collapsed");
+                    }
                 }
                 if ("save" in component && component.save) {
                     const save_button = document.createElement("button");
@@ -241,7 +244,9 @@ export class BForms {
             c.addEventListener("click", e => {
                 e.target.classList.toggle("active");
                 const content = e.target.nextElementSibling;
-                content.style.display = content.style.display === "block" ? "none" : "block";
+                const collapsed = content.style.display === "block";
+                content.style.display = collapsed ? "none" : "block";
+                e.target.classList.toggle("collapsed", collapsed);
             });
         });
     }
