@@ -248,15 +248,20 @@ def send_smartschool_message(infobord_id, message_type=None, subject_template=No
                     return
             sender = "csu"
             sent = 0
+            first_student_body = ""
             for student in students:
                 subject = _replace_message_tags(subject_template, student, info)
                 body = _replace_message_tags(body_template, student, info)
                 leerlingnummer = student["leerlingnummer"] if isinstance(student, dict) else student.leerlingnummer
                 klascode = student["klascode"] if isinstance(student, dict) else student.klascode
                 ss_send_message(leerlingnummer, sender, subject, body, 0, enable_sending, f", {klascode}")
+                if sent == 0:
+                    first_student_body = body
                 sent += 1
             subject = _replace_message_tags(subject_template, None, info)
             body = _replace_message_tags(body_template, None, info)
+            if not enable_sending:
+                body += "<br><br>--------------------------------<br><br>" + first_student_body
             for receiver in additional_receivers:
                 ss_send_message(receiver["ss_internal_nbr"], sender, subject, body, 0, True)
                 sent += 1
