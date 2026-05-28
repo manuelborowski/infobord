@@ -82,10 +82,12 @@ def update(data):
                     "message_type": item["bericht"],
                     "subject_template": item.get("message_title"),
                     "body_template": item.get("message_body"),
+                    "additional_receiver_codes": item.get("message_additional_receivers"),
                     "students": students,
                 })
             item.pop("message_title", None)
             item.pop("message_body", None)
+            item.pop("message_additional_receivers", None)
         ret = dl.infobord.update_m(data)
         for job in message_jobs:
             socketio.start_background_task(send_smartschool_message, **job)
@@ -210,7 +212,7 @@ def smartschool_message_meta(school=None):
         }
     }
 
-def send_smartschool_message(infobord_id, message_type=None, subject_template=None, body_template=None, students=None):
+def send_smartschool_message(infobord_id, message_type=None, subject_template=None, body_template=None, students=None, additional_receiver_codes=None):
     with app.app_context():
         try:
             info = dl.infobord.get([("id", "=", infobord_id)])
@@ -223,8 +225,10 @@ def send_smartschool_message(infobord_id, message_type=None, subject_template=No
                 default_subject_template, default_body_template = _message_templates(message_type)
                 subject_template = default_subject_template if subject_template is None else subject_template
                 body_template = default_body_template if body_template is None else body_template
-            additional_receivers_setting = dl.settings.get_configuration_setting("smartschool-message-additional-receivers") or {}
-            additional_receiver_codes = [code.strip().upper() for code in additional_receivers_setting.get(info.school, []) if code.strip()]
+            if additional_receiver_codes is None:
+                additional_receivers_setting = dl.settings.get_configuration_setting("smartschool-message-additional-receivers") or {}
+                additional_receiver_codes = additional_receivers_setting.get(info.school, [])
+            additional_receiver_codes = [code.strip().upper() for code in additional_receiver_codes if code.strip()]
             additional_receivers = _staff_receivers(additional_receiver_codes)
             enable_sending = dl.settings.get_configuration_setting("smartschool-message-enable-sending")
             if students is None:

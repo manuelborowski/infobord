@@ -3,6 +3,7 @@ import {fetch_delete, fetch_get, fetch_post, fetch_update} from "../common/commo
 import {ContextMenu} from "../common/context_menu.js";
 
 let meta = await fetch_get("infobord.meta", {school: global_data.school});
+const code2staff = Object.fromEntries(meta.staff.map(s => [s.code, s]))
 let info = null;
 const info_date_select = document.getElementById("info-date");
 
@@ -130,19 +131,96 @@ class Info {
         }
     }
 
-    static staff_name = code => {
-        const receiver_code = String(code || "").trim().toUpperCase();
-        const staff = (meta.staff || []).find(s => String(s.code || "").toUpperCase() === receiver_code);
-        if (!staff) return code;
-        if (staff.roepnaam && staff.roepnaam.trim()) return [staff.roepnaam, staff.naam].filter(Boolean).join(" ");
-        return [staff.voornaam, staff.naam].filter(Boolean).join(" ") || code;
+    // clean up value: remove unnecessary spaces. convert to uppercase and make sure it is a string
+    static text_key = value => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+
+    static staff_display_name = staff => {
+        if (staff.roepnaam && staff.roepnaam.trim()) return staff.roepnaam.trim();
+        if (staff.voornaam && staff.naam) return `${staff.voornaam[0]}. ${staff.naam}`;
+        return staff.naam || staff.voornaam || staff.code;
     }
 
-    static prompt_smartschool_message = ({message_type, klas}) => {
+    // find a staff-object from the code, and convert it to a proper label (V. Naam)
+    static staff_name = code => {
+        const receiver_code = String(code || "").trim().toUpperCase();
+        const staff = code2staff[receiver_code];
+        if (!staff) return code;
+        return Info.staff_display_name(staff);
+    }
+
+    // build a clean list of possible combinations of staff naam, voornaam and roepnaam
+    static staff_match_values = staff => [
+        staff.code,
+        staff.naam,
+        staff.voornaam,
+        staff.roepnaam,
+        [staff.voornaam, staff.naam].filter(Boolean).join(" "),
+        staff.voornaam && staff.naam ? `${staff.voornaam[0]}. ${staff.naam}` : "",
+    ].map(Info.text_key).filter(Boolean);
+
+    // Trye to match L. Franiuc to FRAL
+    static staff_from_text = value => {
+        const key = Info.text_key(value);
+        if (!key) return null;
+        // try to find a single match of the key (L. FRANIIUC) in a list of possible matches (FRAL, FRANIUC, L. FRANIUC, ...)
+        const matches = (meta.staff || []).filter(staff => Info.staff_match_values(staff).includes(key));
+        // matches[0] always contains the code (FRAL)
+        return matches.length === 1 ? matches[0] : null;
+    }
+
+    // create a list of unique {staff-code, ticked} objects
+    static receiver_options = ({settings_receivers, leerkracht, vervanger}) => {
+        const receivers = new Map();
+        const add_receiver = (code, checked) => {
+            const receiver_code = String(code || "").trim().toUpperCase();
+            if (!receiver_code) return;
+            if (!receivers.has(receiver_code)) receivers.set(receiver_code, {code: receiver_code, checked});
+            else receivers.get(receiver_code).checked = receivers.get(receiver_code).checked || checked;
+        }
+        // Add the receivers from settings, these are default ticked
+        for (const code of settings_receivers || []) add_receiver(code, true);
+        // Add the replaced staff and replacement staff by matching the content of the column to a staff.  These are default unticked
+        for (const value of [leerkracht, vervanger]) {
+            const staff = Info.staff_from_text(value);
+            if (staff) add_receiver(staff.code, false);
+        }
+        return [...receivers.values()];
+    }
+
+    // HTML specific, create the list of additional receivers
+    static append_receiver_checkboxes = (parent, receivers) => {
+        const ul = document.createElement("ul");
+        parent.appendChild(ul);
+        if (receivers.length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "-";
+            ul.appendChild(li);
+            return [];
+        }
+        const inputs = [];
+        for (const receiver of receivers) {
+            const li = document.createElement("li");
+            ul.appendChild(li);
+            const label = document.createElement("label");
+            li.appendChild(label);
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = receiver.checked;
+            checkbox.dataset.code = receiver.code;
+            checkbox.style.marginRight = "0.4rem";
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(Info.staff_name(receiver.code)));
+            inputs.push(checkbox);
+        }
+        return inputs;
+    }
+
+    static prompt_smartschool_message = ({message_type, klas, leerkracht, vervanger}) => {
         const settings = meta.smartschool_message || {};
         const template = settings.templates?.[message_type] || {title: "", body: ""};
         const popup = document.createElement("div");
         popup.classList.add("smartschool-message-compose");
+        const receivers = Info.receiver_options({settings_receivers: settings.additional_receivers || [], leerkracht, vervanger});
 
         const klas_section = document.createElement("section");
         popup.appendChild(klas_section);
@@ -156,7 +234,7 @@ class Info {
         const receivers_title = document.createElement("h5");
         receivers_title.textContent = "Extra ontvangers";
         receivers_section.appendChild(receivers_title);
-        Info.append_list(receivers_section, (settings.additional_receivers || []).map(Info.staff_name));
+        const receiver_inputs = Info.append_receiver_checkboxes(receivers_section, receivers);
 
         const title_label = document.createElement("label");
         title_label.textContent = "Onderwerp";
@@ -203,7 +281,11 @@ class Info {
                     send: {
                         label: "Verzenden",
                         className: "btn-success",
-                        callback: () => resolve({title: title_input.value, body: quill ? quill.root.innerHTML : template.body || ""})
+                        callback: () => resolve({
+                            title: title_input.value,
+                            body: quill ? quill.root.innerHTML : template.body || "",
+                            additional_receivers: receiver_inputs.filter(input => input.checked).map(input => input.dataset.code),
+                        })
                     }
                 }
             });
@@ -326,6 +408,7 @@ class Info {
             this.info_save_btn.classList.add("blink-button");
         }
 
+        // create a popup for additional information or adaptations and send to backend.
         const __message_send = async e => {
             const value = Info.normalize_bericht(e.target.value);
             const row = e.target.closest("tr");
@@ -345,12 +428,17 @@ class Info {
                 }
             });
             if (value !== "geen") {
-                const popup_data = await Info.prompt_smartschool_message({message_type: value, klas: row.querySelector("[data-field=klas]")?.value || ""});
+                const popup_data = await Info.prompt_smartschool_message({
+                    message_type: value,
+                    klas: data.klas || "",
+                    leerkracht: data.leerkracht || "",
+                    vervanger: data.vervanger || "",
+                });
                 if (!popup_data) {
                     message_sent.value = previous_value;
                     return;
                 }
-                data = {...data, message_title: popup_data.title, message_body: popup_data.body};
+                data = {...data, message_title: popup_data.title, message_body: popup_data.body, message_additional_receivers: popup_data.additional_receivers};
             }
 
             const response = await fetch_update("infobord.infobord", [data]);
@@ -666,9 +754,7 @@ const __init_arrow_keys = () => {
 }
 
 // Type a staff code and press enter.  Relevant info (full name, schedule info) is fetched and fields in the row are populated.
-let code2staff = {};
 const __init_shortcut = () => {
-    code2staff = Object.fromEntries(meta.staff.map(s => [s.code, s]))
     document.addEventListener('keyup', async event => {
         const current_td = document.activeElement.parentNode;
         const current_tr = current_td.parentNode;
