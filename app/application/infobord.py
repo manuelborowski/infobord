@@ -28,11 +28,14 @@ MESSAGE_VARIABLES = [
     "%%NAAM%%", "%%VOORNAAM%%", "%%ROEPNAAM%%", "%%KLAS%%", "%%KLASLIJST%%", "%%LEERLINGNUMMER%%", "%%DATUM%%",
     "%%LESUUR%%", "%%LEERKRACHT%%", "%%VERVANGER%%", "%%LOCATIE%%", "%%STAMLOKAAL%%", "%%INFO%%", "%%EXTRA%%",
 ]
-MESSAGE_TEMPLATE_TAGS = [
-    "<< tekst alleen voor leerlingen >>",
-    "{{ tekst alleen voor extra ontvangers }}",
-]
 CO_ACCOUNT_NUMBERS = [1, 2]
+
+def school_codes():
+    school_configuration = dl.settings.get_configuration_setting("school-configuration") or {}
+    return [str(school).strip().lower() for school in school_configuration if str(school).strip()]
+
+def message_template_tags():
+    return [f"<{school}< tekst alleen voor {school} >>" for school in school_codes()]
 
 def _mark_recent_updates(data, school, datum):
     try:
@@ -168,8 +171,16 @@ def _replace_message_tags(template, student, info):
         except ValueError:
             return str(value)
 
-    template = re.sub(r"(?:<<|&lt;&lt;)\s*(.*?)\s*(?:>>|&gt;&gt;)", r"\1" if student else "", template, flags=re.DOTALL)
-    template = re.sub(r"{{\s*(.*?)\s*}}", "" if student else r"\1", template, flags=re.DOTALL)
+    configured_schools = set(school_codes())
+    info_school = str(info.school or "").lower()
+
+    def school_tag(match):
+        school = match.group(1).lower()
+        if school not in configured_schools:
+            return match.group(0)
+        return match.group(2) if school == info_school else ""
+
+    template = re.sub(r"(?:<|&lt;)([a-z0-9_-]+)(?:<|&lt;)\s*(.*?)\s*(?:>>|&gt;&gt;)", school_tag, template, flags=re.DOTALL | re.IGNORECASE)
     tags = {
         "%%NAAM%%": student_value("naam"),
         "%%VOORNAAM%%": student_value("voornaam"),
@@ -223,7 +234,7 @@ def smartschool_message_meta(school=None):
         "additional_receivers": additional_receivers.get(school, []) if school else additional_receivers,
         "additional_receivers_by_school": additional_receivers,
         "variables": MESSAGE_VARIABLES,
-        "template_tags": MESSAGE_TEMPLATE_TAGS,
+        "template_tags": message_template_tags(),
         "templates": {
             MESSAGE_TYPE_AT_HOME: {
                 "title": dl.settings.get_configuration_setting("smartschool-message-title-at-home"),

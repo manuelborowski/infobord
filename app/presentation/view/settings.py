@@ -78,7 +78,11 @@ def _filter_template_for_current_user(template):
 
 def _settings_template():
     smartschool_message_variables = ", ".join(al.infobord.MESSAGE_VARIABLES)
-    smartschool_message_tags = html.escape(", ".join(al.infobord.MESSAGE_TEMPLATE_TAGS))
+    smartschool_message_tags = html.escape(", ".join(al.infobord.message_template_tags()))
+    smartschool_school_codes = al.infobord.school_codes()
+    smartschool_additional_receivers_example = "<br>".join(
+        f"{html.escape(school)}:<br>&nbsp;&nbsp;- boro" for school in smartschool_school_codes
+    ) or "schoolcode:<br>&nbsp;&nbsp;- boro"
     cron_enable_modules = dl.settings.get_configuration_setting('cron-enable-modules') if _can_access_setting('cron-enable-modules') else {}
     cron_modules_template = [
         {
@@ -118,13 +122,13 @@ def _settings_template():
                 {
                     "type": "container", "label": "Smartschool", "save": True, "default_collapsed": True, "rows": [
                         {
-                            "type": "container", "label": "Bericht voor: Thuis", "save": True, "default_collapsed": True, "rows": [
+                            "type": "container", "label": "Bericht voor: Thuis", "default_collapsed": True, "rows": [
                                 [{"label": "Bericht onderwerp", "name": "smartschool-message-title-at-home", "type": "input", "class": "smartschool-message-title-setting"}],
                                 {"label": "Bericht inhoud", "name": "smartschool-message-body-at-home", "type": "quill", "editor_height": "220px", "class": "smartschool-message-body-setting"},
                             ]
                         },
                         {
-                            "type": "container", "label": "Bericht voor: Naar Huis", "save": True, "default_collapsed": True, "rows": [
+                            "type": "container", "label": "Bericht voor: Naar Huis", "default_collapsed": True, "rows": [
                                 [{"label": "Bericht onderwerp", "name": "smartschool-message-title-to-home", "type": "input", "class": "smartschool-message-title-setting"}],
                                 {"label": "Bericht inhoud", "name": "smartschool-message-body-to-home", "type": "quill", "editor_height": "220px", "class": "smartschool-message-body-setting"},
                             ]
@@ -132,7 +136,7 @@ def _settings_template():
                         {"label": "Extra ontvangers (YAML per school)", "name": "smartschool-message-additional-receivers", "type": "textarea"},
                         [{"label": "Afzender (personeelscode, laat leeg voor generieke afzender Campus Sint-Ursula)", "name": "smartschool-message-sender", "type": "input"}],
                         [{"label": "Smartschool berichten effectief verzenden?", "name": "smartschool-message-enable-sending", "type": "check"}],
-                        {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": f"Extra ontvangers voorbeeld:<br>sum:<br>&nbsp;&nbsp;- boro<br>sul:<br>&nbsp;&nbsp;- boro<br>sui:<br>&nbsp;&nbsp;- boro<br># commentaar<br><br>Beschikbare variabelen: {smartschool_message_variables}<br><br>Beschikbare tags: {smartschool_message_tags}"},
+                        {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": f"Extra ontvangers voorbeeld:<br>{smartschool_additional_receivers_example}<br># commentaar<br><br>Beschikbare variabelen: {smartschool_message_variables}<br><br>Schooltags: {smartschool_message_tags}"},
                     ]
                 },
                 {

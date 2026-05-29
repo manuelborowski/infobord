@@ -271,7 +271,7 @@ class Info {
         popup.appendChild(variables);
         const template_tags = document.createElement("p");
         template_tags.classList.add("smartschool-message-variables");
-        template_tags.textContent = `Mogelijke tags: ${(settings.template_tags || []).join(", ")}`;
+        template_tags.textContent = `Schooltags: ${(settings.template_tags || []).join(", ")}`;
         popup.appendChild(template_tags);
 
         return new Promise(resolve => {
