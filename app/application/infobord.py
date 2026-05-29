@@ -157,6 +157,17 @@ def _replace_message_tags(template, student, info):
             return student.get(name, default)
         return getattr(student, name, default)
 
+    def date_value(value):
+        if not value:
+            return ""
+        if isinstance(value, (datetime.datetime, datetime.date)):
+            return f"{value.day}/{value.month}/{value.year}"
+        try:
+            date = datetime.datetime.strptime(str(value)[:10], "%Y-%m-%d")
+            return f"{date.day}/{date.month}/{date.year}"
+        except ValueError:
+            return str(value)
+
     template = re.sub(r"(?:<<|&lt;&lt;)\s*(.*?)\s*(?:>>|&gt;&gt;)", r"\1" if student else "", template, flags=re.DOTALL)
     template = re.sub(r"{{\s*(.*?)\s*}}", "" if student else r"\1", template, flags=re.DOTALL)
     tags = {
@@ -166,7 +177,7 @@ def _replace_message_tags(template, student, info):
         "%%KLAS%%": student_value("klascode", info.klas),
         "%%KLASLIJST%%": info.klas,
         "%%LEERLINGNUMMER%%": student_value("leerlingnummer"),
-        "%%DATUM%%": info.datum,
+        "%%DATUM%%": date_value(info.datum),
         "%%LESUUR%%": str(info.lesuur),
         "%%LEERKRACHT%%": info.leerkracht,
         "%%VERVANGER%%": info.vervanger,

@@ -70,3 +70,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.64: ss message, add replaced-staff and replacement-staff (from the row) as well as additional receivers.
 0.65: ss message, make sender configurable
 0.66: ss message, send to co-accounts as well
+0.67: ss message, change datum format to d/m/yyyy
