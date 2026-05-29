@@ -60,6 +60,15 @@
     text-align: left;
 }
 
+.smartschool-message-dialog .modal-xl {
+    max-width: min(95vw, 1800px);
+}
+
+.smartschool-message-compose .form-control,
+.smartschool-message-compose section {
+    width: 100%;
+}
+
 .smartschool-message-compose section {
     margin-bottom: 12px;
 }
@@ -76,6 +85,7 @@
 
 .smartschool-message-body-editor {
     min-height: 260px;
+    width: 100%;
 }
 
 .smartschool-message-variables {

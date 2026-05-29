@@ -76,6 +76,17 @@ label.top {
     color: orangered;
 }
 
+.smartschool-message-title-setting {
+    width: min(900px, calc(95vw - 140px));
+    max-width: 100%;
+}
+
+.form-element > label.smartschool-message-body-setting,
+.smartschool-message-body-setting.bform-quill-editor {
+    width: min(900px, calc(95vw - 140px));
+    max-width: 100%;
+}
+
 
 /* Style the button that is used to open and close the form-container content */
 .form-container {

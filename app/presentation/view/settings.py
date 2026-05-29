@@ -119,14 +119,14 @@ def _settings_template():
                     "type": "container", "label": "Smartschool", "save": True, "default_collapsed": True, "rows": [
                         {
                             "type": "container", "label": "Bericht voor: Thuis", "save": True, "default_collapsed": True, "rows": [
-                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-at-home", "type": "input"}],
-                                {"label": "Bericht inhoud", "name": "smartschool-message-body-at-home", "type": "quill", "editor_height": "220px"},
+                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-at-home", "type": "input", "class": "smartschool-message-title-setting"}],
+                                {"label": "Bericht inhoud", "name": "smartschool-message-body-at-home", "type": "quill", "editor_height": "220px", "class": "smartschool-message-body-setting"},
                             ]
                         },
                         {
                             "type": "container", "label": "Bericht voor: Naar Huis", "save": True, "default_collapsed": True, "rows": [
-                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-to-home", "type": "input"}],
-                                {"label": "Bericht inhoud", "name": "smartschool-message-body-to-home", "type": "quill", "editor_height": "220px"},
+                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-to-home", "type": "input", "class": "smartschool-message-title-setting"}],
+                                {"label": "Bericht inhoud", "name": "smartschool-message-body-to-home", "type": "quill", "editor_height": "220px", "class": "smartschool-message-body-setting"},
                             ]
                         },
                         {"label": "Extra ontvangers (YAML per school)", "name": "smartschool-message-additional-receivers", "type": "textarea"},

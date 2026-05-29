@@ -71,3 +71,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.65: ss message, make sender configurable
 0.66: ss message, send to co-accounts as well
 0.67: ss message, change datum format to d/m/yyyy
+0.68: make the message title and body wider

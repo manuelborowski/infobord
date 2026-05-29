@@ -200,6 +200,10 @@ export class BForms {
                             quill_editor = document.createElement("div");
                             quill_editor.style.minHeight = element.editor_height || "220px";
                             quill_editor.classList.add("bform-quill-editor");
+                            if ("class" in element) {
+                                label.classList.add(...element.class.split(" "));
+                                quill_editor.classList.add(...element.class.split(" "));
+                            }
                             label.classList.add("top");
                         } else if (element.type === "check") {
                             tag = document.createElement("input");
