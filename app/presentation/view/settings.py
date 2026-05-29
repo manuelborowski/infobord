@@ -27,6 +27,7 @@ setting_levels = {
     'smartschool-message-title-to-home': 3,
     'smartschool-message-body-to-home': 3,
     'smartschool-message-additional-receivers': 3,
+    'smartschool-message-sender': 3,
     'smartschool-message-enable-sending': 3,
     'user-datatables-template': 5,
     'school-configuration': 5,
@@ -129,6 +130,7 @@ def _settings_template():
                             ]
                         },
                         {"label": "Extra ontvangers (YAML per school)", "name": "smartschool-message-additional-receivers", "type": "textarea"},
+                        [{"label": "Afzender (personeelscode, laat leeg voor generieke afzender Campus Sint-Ursula)", "name": "smartschool-message-sender", "type": "input"}],
                         [{"label": "Smartschool berichten effectief verzenden?", "name": "smartschool-message-enable-sending", "type": "check"}],
                         {"type": "div", "setting": "smartschool-message-additional-receivers", "innerHTML": f"Extra ontvangers voorbeeld:<br>sum:<br>&nbsp;&nbsp;- boro<br>sul:<br>&nbsp;&nbsp;- boro<br>sui:<br>&nbsp;&nbsp;- boro<br># commentaar<br><br>Beschikbare variabelen: {smartschool_message_variables}<br><br>Beschikbare tags: {smartschool_message_tags}"},
                     ]

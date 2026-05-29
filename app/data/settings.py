@@ -98,6 +98,7 @@ default_configuration_settings = {
     'smartschool-message-title-to-home': ('', Settings.SETTING_TYPE.E_STRING),
     'smartschool-message-body-to-home': ('', Settings.SETTING_TYPE.E_STRING),
     'smartschool-message-additional-receivers': ({'sum': ['boro'], 'sul': ['boro'], 'sui': ['boro']}, Settings.SETTING_TYPE.E_YAML),
+    'smartschool-message-sender': ('', Settings.SETTING_TYPE.E_STRING),
     'smartschool-message-enable-sending': (True, Settings.SETTING_TYPE.E_BOOL),
 
     'user-datatables-template': ({}, Settings.SETTING_TYPE.E_YAML),

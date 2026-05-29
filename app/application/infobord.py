@@ -186,6 +186,16 @@ def _staff_receivers(codes):
             log.error(f'{sys._getframe().f_code.co_name}: could not find Smartschool internal number for staff code {code}')
     return receivers
 
+def _message_sender():
+    code = (dl.settings.get_configuration_setting("smartschool-message-sender") or "").strip()
+    if not code or code.lower() == "csu":
+        return "csu"
+    staff = dl.staff.get(("code", "=", code))
+    if staff and staff.ss_internal_nbr:
+        return staff.ss_internal_nbr
+    log.error(f'{sys._getframe().f_code.co_name}: could not find Smartschool internal number for sender staff code {code}')
+    return "csu"
+
 def _message_templates(message_type):
     settings = MESSAGE_SETTINGS.get(message_type, MESSAGE_SETTINGS[MESSAGE_TYPE_AT_HOME])
     return (
@@ -236,7 +246,7 @@ def send_smartschool_message(infobord_id, message_type=None, subject_template=No
                 if error_msg:
                     log.error(f'{sys._getframe().f_code.co_name}: {error_msg}, infobord {infobord_id}, klas {info.klas}')
                     return
-            sender = "csu"
+            sender = _message_sender()
             sent = 0
             first_student_body = ""
             for student in students:
