@@ -69,3 +69,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.63: message popup, additional receiver, show name iso code
 0.64: ss message, add replaced-staff and replacement-staff (from the row) as well as additional receivers.
 0.65: ss message, make sender configurable
+0.66: ss message, send to co-accounts as well

@@ -229,6 +229,20 @@ class Info {
         klas_section.appendChild(klas_title);
         Info.append_list(klas_section, Info.split_klassen(klas));
 
+        const co_accounts_section = document.createElement("section");
+        popup.appendChild(co_accounts_section);
+        const co_accounts_title = document.createElement("h5");
+        co_accounts_title.textContent = "Co-accounts";
+        co_accounts_section.appendChild(co_accounts_title);
+        const co_accounts_label = document.createElement("label");
+        co_accounts_section.appendChild(co_accounts_label);
+        const co_accounts_input = document.createElement("input");
+        co_accounts_input.type = "checkbox";
+        co_accounts_input.checked = true;
+        co_accounts_input.style.marginRight = "0.4rem";
+        co_accounts_label.appendChild(co_accounts_input);
+        co_accounts_label.appendChild(document.createTextNode("Co-accounts"));
+
         const receivers_section = document.createElement("section");
         popup.appendChild(receivers_section);
         const receivers_title = document.createElement("h5");
@@ -284,6 +298,7 @@ class Info {
                         callback: () => resolve({
                             title: title_input.value,
                             body: quill ? quill.root.innerHTML : template.body || "",
+                            send_to_coaccounts: co_accounts_input.checked,
                             additional_receivers: receiver_inputs.filter(input => input.checked).map(input => input.dataset.code),
                         })
                     }
@@ -438,7 +453,7 @@ class Info {
                     message_sent.value = previous_value;
                     return;
                 }
-                data = {...data, message_title: popup_data.title, message_body: popup_data.body, message_additional_receivers: popup_data.additional_receivers};
+                data = {...data, message_title: popup_data.title, message_body: popup_data.body, message_send_to_coaccounts: popup_data.send_to_coaccounts, message_additional_receivers: popup_data.additional_receivers};
             }
 
             const response = await fetch_update("infobord.infobord", [data]);

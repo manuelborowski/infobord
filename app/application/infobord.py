@@ -32,6 +32,7 @@ MESSAGE_TEMPLATE_TAGS = [
     "<< tekst alleen voor leerlingen >>",
     "{{ tekst alleen voor extra ontvangers }}",
 ]
+CO_ACCOUNT_NUMBERS = [1, 2]
 
 def _mark_recent_updates(data, school, datum):
     try:
@@ -79,6 +80,7 @@ def update(data):
                     return {"status": "error", "msg": f"{error_msg}. <br>Pas de klassen aan en probeer opnieuw."}
                 message_jobs.append({
                     "infobord_id": current.id,
+                    "send_to_coaccounts": item.get("message_send_to_coaccounts", True),
                     "message_type": item["bericht"],
                     "subject_template": item.get("message_title"),
                     "body_template": item.get("message_body"),
@@ -88,6 +90,7 @@ def update(data):
             item.pop("message_title", None)
             item.pop("message_body", None)
             item.pop("message_additional_receivers", None)
+            item.pop("message_send_to_coaccounts", None)
         ret = dl.infobord.update_m(data)
         for job in message_jobs:
             socketio.start_background_task(send_smartschool_message, **job)
@@ -222,7 +225,7 @@ def smartschool_message_meta(school=None):
         }
     }
 
-def send_smartschool_message(infobord_id, message_type=None, subject_template=None, body_template=None, students=None, additional_receiver_codes=None):
+def send_smartschool_message(infobord_id, send_to_coaccounts=True, message_type=None, subject_template=None, body_template=None, students=None, additional_receiver_codes=None):
     with app.app_context():
         try:
             info = dl.infobord.get([("id", "=", infobord_id)])
@@ -238,7 +241,7 @@ def send_smartschool_message(infobord_id, message_type=None, subject_template=No
             if additional_receiver_codes is None:
                 additional_receivers_setting = dl.settings.get_configuration_setting("smartschool-message-additional-receivers") or {}
                 additional_receiver_codes = additional_receivers_setting.get(info.school, [])
-            additional_receiver_codes = [code.strip().upper() for code in additional_receiver_codes if code.strip()]
+            additional_receiver_codes = [str(code or "").strip().upper() for code in additional_receiver_codes or [] if str(code or "").strip()]
             additional_receivers = _staff_receivers(additional_receiver_codes)
             enable_sending = dl.settings.get_configuration_setting("smartschool-message-enable-sending")
             if students is None:
@@ -248,6 +251,7 @@ def send_smartschool_message(infobord_id, message_type=None, subject_template=No
                     return
             sender = _message_sender()
             sent = 0
+            # in test mode (when not sending to students), attach a copy of the message body to the message send to additional receivers
             first_student_body = ""
             for student in students:
                 subject = _replace_message_tags(subject_template, student, info)
@@ -255,9 +259,12 @@ def send_smartschool_message(infobord_id, message_type=None, subject_template=No
                 leerlingnummer = student["leerlingnummer"] if isinstance(student, dict) else student.leerlingnummer
                 klascode = student["klascode"] if isinstance(student, dict) else student.klascode
                 ss_send_message(leerlingnummer, sender, subject, body, 0, enable_sending, f", {klascode}")
+                if send_to_coaccounts:
+                    for account in CO_ACCOUNT_NUMBERS:
+                        ss_send_message(leerlingnummer, sender, subject, body, account, enable_sending, f", {klascode}")
                 if sent == 0:
                     first_student_body = body
-                sent += 1
+                sent += 1 + (len(CO_ACCOUNT_NUMBERS) if send_to_coaccounts else 0)
             subject = _replace_message_tags(subject_template, None, info)
             body = _replace_message_tags(body_template, None, info)
             if not enable_sending:
