@@ -4,6 +4,12 @@ import {ContextMenu} from "../common/context_menu.js";
 
 let meta = await fetch_get("infobord.meta", {school: global_data.school});
 const code2staff = Object.fromEntries(meta.staff.map(s => [s.code, s]))
+const schoolschedule_code2staff_code = Object.fromEntries(
+    Object.entries(meta.schoolschedule_staff_code_map || {}).map(([schoolschedule_code, staff_code]) => [
+        String(schoolschedule_code || "").trim().toUpperCase(),
+        String(staff_code || "").trim().toUpperCase(),
+    ])
+);
 let info = null;
 const info_date_select = document.getElementById("info-date");
 
@@ -768,7 +774,7 @@ const __init_arrow_keys = () => {
 
 }
 
-// Type a staff code and press enter.  Relevant info (full name, schedule info) is fetched and fields in the row are populated.
+// Type a schoolschedule code and press enter.  Relevant info (full name, schedule info) is fetched and fields in the row are populated.
 const __init_shortcut = () => {
     document.addEventListener('keyup', async event => {
         const current_td = document.activeElement.parentNode;
@@ -777,15 +783,16 @@ const __init_shortcut = () => {
         // consider the 3rd column only (Te vervangen)
         if (index === info.column_index("leerkracht")) {
             const value = document.activeElement.value;
-            if (event.code === "Enter" && value.toUpperCase() in code2staff) {
-                const code = value.toUpperCase();
-                const staff = code2staff[code];
+            const schoolschedule_code = String(value || "").trim().toUpperCase();
+            const staff_code = schoolschedule_code2staff_code[schoolschedule_code] || schoolschedule_code;
+            if (event.code === "Enter" && staff_code in code2staff) {
+                const staff = code2staff[staff_code];
                 document.activeElement.value = staff.roepnaam === "" ? `${staff.voornaam[0]}. ${staff.naam}` : staff.roepnaam;
                 if (meta.school_info.use_schedule) {
                     const lesuur = current_tr.children[1].firstChild.value;
                     const day = new Date(document.getElementById("info-date").value).getDay();
                     // Try to fill the klascode and lokaal fields
-                    let schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},leerkracht$=$${code}`});
+                    let schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},lestijd$=$${lesuur},leerkracht$=$${schoolschedule_code}`});
                     if (schedules.length > 0) {
                         let klascode = "";
                         let lokaal = [...new Set(schedules.map(s => s.lokaal))].join(", ");
@@ -799,7 +806,7 @@ const __init_shortcut = () => {
                         current_tr.children[info.column_index("klas")].firstChild.value = klascode;
                     }
                 }
-                current_tr.dataset["code"] = code
+                current_tr.dataset["code"] = staff_code
             }
         }
     });

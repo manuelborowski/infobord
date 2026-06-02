@@ -101,6 +101,7 @@ def meta():
         "school_info": school_info,
         "field_info": field_info,
         "staff": staff,
+        "schoolschedule_staff_code_map": dl.settings.get_configuration_setting("schoolschedule-staff-code-map") or {},
         "klasgroepen": al.infobord.get_klasgroepen(school),
         "smartschool_message": al.infobord.smartschool_message_meta(school),
     })

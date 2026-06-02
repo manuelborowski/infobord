@@ -32,6 +32,7 @@ setting_levels = {
     'user-datatables-template': 5,
     'school-configuration': 5,
     'field-configuration': 5,
+    'schoolschedule-staff-code-map': 5,
 }
 
 def _current_user_level():
@@ -147,6 +148,11 @@ def _settings_template():
                 {
                     "type": "container", "label": "Velden configuratie", "save": True, "default_collapsed": True, "rows": [
                         {"label": "YAML", "name": "field-configuration", "type": "textarea"},
+                    ]
+                },
+                {
+                    "type": "container", "label": "Lessenrooster", "save": True, "default_collapsed": True, "rows": [
+                        {"label": "Lessenrooster codes naar Personeelscodes", "name": "schoolschedule-staff-code-map", "type": "textarea"},
                     ]
                 },
             ]

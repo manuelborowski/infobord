@@ -105,6 +105,7 @@ default_configuration_settings = {
 
     'school-configuration': ({}, Settings.SETTING_TYPE.E_YAML),
     'field-configuration': ({}, Settings.SETTING_TYPE.E_YAML),
+    'schoolschedule-staff-code-map': ({'VDES': 'VDEK'}, Settings.SETTING_TYPE.E_YAML),
 
 }
 
