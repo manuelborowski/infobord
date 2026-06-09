@@ -112,6 +112,8 @@ class Info {
         "geen": "Geen",
         "at-home": "Thuis",
         "to-home": "Naar Huis",
+        "lesson-swap-at-home": "Leswissel (of Thuis)",
+        "lesson-swap-to-home": "Leswissel (of Naar Huis)",
     }
 
     static normalize_bericht = value => {
@@ -188,7 +190,7 @@ class Info {
         // Add the replaced staff and replacement staff by matching the content of the column to a staff.  These are default unticked
         for (const value of [leerkracht, vervanger]) {
             const staff = Info.staff_from_text(value);
-            if (staff) add_receiver(staff.code, false);
+            if (staff) add_receiver(staff.code, true);
         }
         return [...receivers.values()];
     }

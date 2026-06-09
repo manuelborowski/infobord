@@ -185,7 +185,8 @@ export class BForms {
                             span.appendChild(save_button);
                         }
                         span.appendChild(text);
-                        const label = document.createElement("label");
+                        const label = document.createElement(element.type === "quill" ? "div" : "label");
+                        if (element.type === "quill") label.classList.add("bform-field");
                         form_element.appendChild(label);
                         if (element.type === "textarea") {
                             tag = document.createElement("textarea");
@@ -231,6 +232,10 @@ export class BForms {
                         // Create a new quill editor inside the hidden textarea
                         if (element.editor_id) quill_editor.id = element.editor_id;
                         this.quill_editors[element.name] = new Quill(quill_editor, element.quill || {theme: "snow"});
+                        this.quill_editors[element.name].on("text-change", () => {
+                            const field = this.form.querySelector(`[name=${element.name}]`);
+                            if (field) field.value = this.quill_editors[element.name].root.innerHTML;
+                        });
                     }
                     if ("id" in element) this.id2element[element.id] = {element: tag, type: "element"};
                 }

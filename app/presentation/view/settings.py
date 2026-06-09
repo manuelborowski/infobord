@@ -26,6 +26,10 @@ setting_levels = {
     'smartschool-message-body-at-home': 3,
     'smartschool-message-title-to-home': 3,
     'smartschool-message-body-to-home': 3,
+    'smartschool-message-title-lesson-swap-at-home': 3,
+    'smartschool-message-body-lesson-swap-at-home': 3,
+    'smartschool-message-title-lesson-swap-to-home': 3,
+    'smartschool-message-body-lesson-swap-to-home': 3,
     'smartschool-message-additional-receivers': 3,
     'smartschool-message-sender': 3,
     'smartschool-message-enable-sending': 3,
@@ -132,6 +136,18 @@ def _settings_template():
                             "type": "container", "label": "Bericht voor: Naar Huis", "default_collapsed": True, "rows": [
                                 [{"label": "Bericht onderwerp", "name": "smartschool-message-title-to-home", "type": "input", "class": "smartschool-message-title-setting"}],
                                 {"label": "Bericht inhoud", "name": "smartschool-message-body-to-home", "type": "quill", "editor_height": "220px", "class": "smartschool-message-body-setting"},
+                            ]
+                        },
+                        {
+                            "type": "container", "label": "Bericht voor: Leswissel (of Thuis)", "default_collapsed": True, "rows": [
+                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-lesson-swap-at-home", "type": "input", "class": "smartschool-message-title-setting"}],
+                                {"label": "Bericht inhoud", "name": "smartschool-message-body-lesson-swap-at-home", "type": "quill", "editor_height": "220px", "class": "smartschool-message-body-setting"},
+                            ]
+                        },
+                        {
+                            "type": "container", "label": "Bericht voor: Leswissel (of Naar Huis)", "default_collapsed": True, "rows": [
+                                [{"label": "Bericht onderwerp", "name": "smartschool-message-title-lesson-swap-to-home", "type": "input", "class": "smartschool-message-title-setting"}],
+                                {"label": "Bericht inhoud", "name": "smartschool-message-body-lesson-swap-to-home", "type": "quill", "editor_height": "220px", "class": "smartschool-message-body-setting"},
                             ]
                         },
                         {"label": "Extra ontvangers (YAML per school)", "name": "smartschool-message-additional-receivers", "type": "textarea"},

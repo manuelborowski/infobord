@@ -12,6 +12,8 @@ log.addFilter(MyLogFilter())
 MESSAGE_TYPE_NONE = "geen"
 MESSAGE_TYPE_AT_HOME = "at-home"
 MESSAGE_TYPE_TO_HOME = "to-home"
+MESSAGE_TYPE_LESSON_SWAP_AT_HOME = "lesson-swap-at-home"
+MESSAGE_TYPE_LESSON_SWAP_TO_HOME = "lesson-swap-to-home"
 
 MESSAGE_SETTINGS = {
     MESSAGE_TYPE_AT_HOME: {
@@ -21,6 +23,14 @@ MESSAGE_SETTINGS = {
     MESSAGE_TYPE_TO_HOME: {
         "title": "smartschool-message-title-to-home",
         "body": "smartschool-message-body-to-home",
+    },
+    MESSAGE_TYPE_LESSON_SWAP_AT_HOME: {
+        "title": "smartschool-message-title-lesson-swap-at-home",
+        "body": "smartschool-message-body-lesson-swap-at-home",
+    },
+    MESSAGE_TYPE_LESSON_SWAP_TO_HOME: {
+        "title": "smartschool-message-title-lesson-swap-to-home",
+        "body": "smartschool-message-body-lesson-swap-to-home",
     },
 }
 
@@ -236,14 +246,11 @@ def smartschool_message_meta(school=None):
         "variables": MESSAGE_VARIABLES,
         "template_tags": message_template_tags(),
         "templates": {
-            MESSAGE_TYPE_AT_HOME: {
-                "title": dl.settings.get_configuration_setting("smartschool-message-title-at-home"),
-                "body": dl.settings.get_configuration_setting("smartschool-message-body-at-home"),
-            },
-            MESSAGE_TYPE_TO_HOME: {
-                "title": dl.settings.get_configuration_setting("smartschool-message-title-to-home"),
-                "body": dl.settings.get_configuration_setting("smartschool-message-body-to-home"),
-            },
+            message_type: {
+                "title": dl.settings.get_configuration_setting(settings["title"]),
+                "body": dl.settings.get_configuration_setting(settings["body"]),
+            }
+            for message_type, settings in MESSAGE_SETTINGS.items()
         }
     }
 

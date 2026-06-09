@@ -21,7 +21,8 @@
     margin-right: 10px;
 }
 
-.form-element > label {
+.form-element > label,
+.form-element > .bform-field {
     display: flex;
     align-items: center;
 }
@@ -33,19 +34,22 @@
     text-align: right;
 }
 
-.form-element > label > input {
+.form-element > label > input,
+.form-element > .bform-field > input {
     vertical-align: middle;
     margin-top: 0;
     padding-left: 3px;
 }
 
-.form-element > label > textarea {
+.form-element > label > textarea,
+.form-element > .bform-field > textarea {
     line-height: 1;
     padding-left: 2px;
     resize: both;
 }
 
-.form-element > label > * {
+.form-element > label > *,
+.form-element > .bform-field > * {
     margin-left: 10px;
     margin-right: 5px;
 }
@@ -55,7 +59,8 @@
     flex: 0 0 200px;
 }
 
-label.top {
+label.top,
+.bform-field.top {
     flex-direction: column;
     align-items: unset;
 }
