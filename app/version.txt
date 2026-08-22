@@ -75,3 +75,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.69: ss message, added school-specific tags.  Per school, text can be inserted
 0.70: staff codes, allow for translation if schoolschedule code is different from staff code
 0.71: smartschool message, added additional templates.  Tick default replacement-staff and to-be-replaced-staff
+0.72: added option to insert a table in extra-info

@@ -2,6 +2,8 @@ import {base_init} from "../base.js";
 import {fetch_delete, fetch_get, fetch_post, fetch_update} from "../common/common.js";
 import {ContextMenu} from "../common/context_menu.js";
 
+Quill.register({'modules/table-better': QuillTableBetter}, true);
+
 let meta = await fetch_get("infobord.meta", {school: global_data.school});
 const code2staff = Object.fromEntries(meta.staff.map(s => [s.code, s]))
 const schoolschedule_code2staff_code = Object.fromEntries(
@@ -36,6 +38,7 @@ class ExtraInfo {
         ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
         ['blockquote', 'code-block'],
         ['link', 'image', 'video', 'formula'],
+        ['table-better'],
 
         [{'header': 1}, {'header': 2}],               // custom button values
         [{'list': 'ordered'}, {'list': 'bullet'}, {'list': 'check'}],
@@ -68,7 +71,21 @@ class ExtraInfo {
     ]
 
     constructor(info_save_btn) {
-        this.quill = new Quill(document.getElementById("extra-info"), {modules: {toolbar: ExtraInfo.quill_toolbar_options}, theme: 'snow', placeholder: "Typ hier je boodschap"});
+        this.quill = new Quill(document.getElementById("extra-info"), {
+            modules: {
+                table: false,
+                toolbar: ExtraInfo.quill_toolbar_options,
+                'table-better': {
+                    language: 'en_US',
+                    toolbarTable: true,
+                },
+                keyboard: {
+                    bindings: QuillTableBetter.keyboardBindings,
+                },
+            },
+            theme: 'snow',
+            placeholder: "Typ hier je boodschap",
+        });
         this.__location = document.getElementById("extra-info-location");
         this.__location.innerHTML = "";
         ExtraInfo.location_options.forEach(o => this.__location.add(new Option(o.label, o.value)));
@@ -78,13 +95,22 @@ class ExtraInfo {
     }
 
     content_get() {
-        return this.quill.root.innerHTML;
+        // Convert the table module's internal structure to standard table HTML
+        // before storing it. The standard editor HTML omits table cell content.
+        this.quill.getModule('table-better').deleteTableTemporary();
+        return this.quill.getSemanticHTML();
     }
 
     async content_set(msg) {
-        // disable the eventhandler temporarily else the save button starts blinking when the page is loaded
+        // The table module cannot restore tables through setContents(), which is
+        // used internally by dangerouslyPasteHTML(). Insert the converted HTML
+        // into an empty editor instead.
         this.quill.off("text-change");
-        await this.quill.clipboard.dangerouslyPasteHTML(msg);
+        this.quill.setText("");
+        if (msg) {
+            const delta = this.quill.clipboard.convert({html: msg});
+            this.quill.updateContents(delta, Quill.sources.API);
+        }
         this.quill.on("text-change", () => this.info_save_btn.classList.add("blink-button"));
     }
 
