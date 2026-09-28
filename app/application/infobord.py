@@ -299,7 +299,7 @@ def send_smartschool_message(infobord_id, send_to_coaccounts=True, message_type=
             if not enable_sending:
                 body += "<br><br>--------------------------------<br><br>" + first_student_body
             for receiver in additional_receivers:
-                ss_send_message(receiver["ss_internal_nbr"], sender, subject, body, 0, True)
+                ss_send_message(receiver["ss_internal_nbr"], sender, subject, body, 0, enable_sending)
                 sent += 1
             log.info(f'{sys._getframe().f_code.co_name}: Smartschool message for infobord {infobord_id}, klas {info.klas}, sent {sent}, enable_sending {enable_sending}')
         except Exception as e:
