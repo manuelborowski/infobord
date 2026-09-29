@@ -78,3 +78,4 @@ When a certain entry is updated, and "bewaar" is clicked, all entries are treate
 0.72: added option to insert a table in extra-info
 0.73: smartschool messages, when disabled, disable sending to teachers as well.
 0.74: date selection, add previous, next and today buttons
+0.75: whole day, add a text input, when an absent staff code is entered, rows are added for the whole day

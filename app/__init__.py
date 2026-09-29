@@ -11,7 +11,7 @@ from functools import wraps
 
 #Warning: update flask_jsglue.py: from markupsafe import Markup
 
-version = "0.74"
+version = "0.75"
 
 app = Flask(__name__, instance_relative_config=True, template_folder='presentation/template/')
 

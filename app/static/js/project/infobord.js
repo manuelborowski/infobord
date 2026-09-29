@@ -192,7 +192,7 @@ class Info {
         staff.voornaam && staff.naam ? `${staff.voornaam[0]}. ${staff.naam}` : "",
     ].map(Info.text_key).filter(Boolean);
 
-    // Trye to match L. Franiuc to FRAL
+    // Try to match L. Franiuc to FRAL
     static staff_from_text = value => {
         const key = Info.text_key(value);
         if (!key) return null;
@@ -791,6 +791,64 @@ class Info {
         this.draw(data)
     }
 
+    whole_day_add = async input => {
+        const code = input.value.trim().toUpperCase();
+        if (!code || input.disabled) return;
+        const date = info_date_select.value;
+        const day = __parse_date(date).getDay();
+        input.disabled = true;
+        try {
+            const schedules = await fetch_get("infobord.schedule", {filters: `school$=$${global_data.school},dag$=$${day},leerkracht$=$${code}`});
+            if (!Array.isArray(schedules)) {
+                bootbox.alert("Het uurrooster kon niet worden opgehaald. Probeer opnieuw.");
+                return;
+            }
+            if (info_date_select.value !== date) {
+                bootbox.alert("De datum is gewijzigd. Geef de code opnieuw in voor de gekozen dag.");
+                return;
+            }
+            if (schedules.length === 0) {
+                bootbox.alert("Geen lessen gevonden voor deze leerkracht op de gekozen dag en school.");
+                return;
+            }
+            const staff_code = schoolschedule_code2staff_code[code] || code;
+            const schedules_by_hour = new Map();
+            for (const schedule of schedules) {
+                const hour = Number(schedule.lestijd);
+                if (!schedules_by_hour.has(hour)) schedules_by_hour.set(hour, []);
+                schedules_by_hour.get(hour).push(schedule);
+            }
+            // create rows
+            // [...schedules_by_hour] is [[3, hours], [1, hours], ...]
+            const data = [...schedules_by_hour].sort(([a], [b]) => a - b).map(([hour, lessons]) => ({
+                ...Object.fromEntries(meta.school_info.fields.map(field => [field, ""])),
+                id: this.id_ctr--,
+                staff: current_user.username,
+                lesuur: hour,
+                leerkracht: Info.staff_name(staff_code),
+                klas: global_data.school === "sum" ? (lessons[0].klascode || "").substring(0, 2)
+                    : global_data.school === "sul" ? format_sul_klascode(lessons)
+                    : [...new Set(lessons.map(lesson => lesson.klascode).filter(Boolean))].join(", "),
+                [global_data.school === "sum" ? "stamlokaal" : "locatie"]: [...new Set(lessons.map(lesson => lesson.lokaal).filter(Boolean))].join(", "),
+                bericht: "geen",
+                recent_update: false,
+            }));
+            this.draw(data, 0, true);
+            for (const item of data) {
+                Info.info_table_tbl.querySelector(`tr[data-id="${item.id}"]`).dataset.code = staff_code;
+            }
+            this.info_save_btn.classList.add("blink-button");
+            // Use the existing input handler to preserve all unsaved rows locally.
+            Info.info_table_tbl.querySelector(`tr[data-id="${data[0].id}"] [data-field="lesuur"]`).dispatchEvent(new Event("input", {bubbles: true}));
+            input.value = "";
+        } catch (error) {
+            console.error("Whole-day schedule lookup failed", error);
+            bootbox.alert("Het uurrooster kon niet worden toegevoegd. Probeer opnieuw.");
+        } finally {
+            input.disabled = false;
+        }
+    }
+
     row_add = nbr => {
         this.draw([], nbr, true);
     }
@@ -1014,6 +1072,12 @@ $(document).ready(async function () {
     info = new Info(document.getElementById("info-save"))
     info.init_date_select();
     await info.load();
+
+    document.getElementById("whole-day").addEventListener("keydown", event => {
+        if (event.key !== "Enter" || event.isComposing) return;
+        event.preventDefault();
+        info.whole_day_add(event.currentTarget);
+    });
 
     document.getElementById("preview").addEventListener("click", () => {
         window.open(window.location.origin + "/infobordview?school=" + global_data.school + "&datum=" + info_date_select.value + "&fontsize=x-large&preview=true", "_blank");
