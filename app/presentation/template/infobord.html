@@ -11,7 +11,10 @@
     {{ super() }}
     <div style="display:flex;">
         <h2>Vervangingen voor {{ global_data.school }}</h2>&nbsp;&nbsp;
-        <select id="info-date"></select>&nbsp;&nbsp;
+        <button type="button" id="info-date-previous" class="btn btn-secondary" aria-label="Vorige werkdag" title="Vorige werkdag">&#8592;</button>&nbsp;
+        <select id="info-date"></select>&nbsp;
+        <button type="button" id="info-date-next" class="btn btn-secondary" aria-label="Volgende werkdag" title="Volgende werkdag">&#8594;</button>&nbsp;&nbsp;
+        <button type="button" id="info-date-today" class="btn btn-secondary">Vandaag</button>&nbsp;&nbsp;
         <a type="button" id="preview" class="btn btn-success">Preview</a></div>
     </div>
     <div id="info-table"></div>

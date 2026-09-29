@@ -583,6 +583,24 @@ class Info {
         ));
     }
 
+    // Move the selected day back of forth (direction).  Skip weekends.
+    // Return index in days-list (options) or -1 when outside list
+    adjacent_date_index = direction => {
+        const options = info_date_select.options;
+        for (let index = info_date_select.selectedIndex + direction; index >= 0 && index < options.length; index += direction) {
+            if (options[index].disabled) continue;
+            const day = __parse_date(options[index].value).getDay();
+            if (day > 0 && day < 6) return index;
+        }
+        return -1;
+    }
+
+    // Disable a direction-button when there are no more days in said direction
+    update_date_buttons = () => {
+        document.getElementById("info-date-previous").disabled = this.adjacent_date_index(-1) === -1;
+        document.getElementById("info-date-next").disabled = this.adjacent_date_index(1) === -1;
+    }
+
     init_date_select = (view_date = null) => {
         info_date_select.innerHTML = "";
         let date = new Date();
@@ -590,7 +608,7 @@ class Info {
         date.setDate(date.getDate() - 15);
         for (let dag = -15; dag < 35; dag++) {
             let day_of_week = date.getDay() % 7;
-            let date_label = date.toISOString().split("T")[0];
+            let date_label = __format_date(date);
             if (dag === 0 && !view_date) view_date = date_label;
             if (dagen[day_of_week] !== "") {
                 info_date_select.add(new Option(`${dag === 0 ? "Vandaag" : dagen[day_of_week]} (${date_label})`, date_label, view_date === date_label, view_date === date_label));
@@ -604,6 +622,27 @@ class Info {
             date.setDate(date.getDate() + 1);
         }
         this.current_date = info_date_select.value;
+        // Install eventhandlers for direction-buttons
+        for (const [id, direction] of [["info-date-previous", -1], ["info-date-next", 1]]) {
+            document.getElementById(id).addEventListener("click", () => {
+                const index = this.adjacent_date_index(direction);
+                if (index === -1) return;
+                info_date_select.selectedIndex = index;
+                info_date_select.dispatchEvent(new Event("change", {bubbles: true}));
+            });
+        }
+        // Install eventhandler for today-button
+        document.getElementById("info-date-today").addEventListener("click", () => {
+            const today = __format_date(new Date());
+            if (info_date_select.value === today) return;
+            if (!Array.from(info_date_select.options).some(option => option.value === today)) {
+                const next_date = Array.from(info_date_select.options).find(option => !option.disabled && option.value > today);
+                info_date_select.add(new Option(`Vandaag (${today})`, today), next_date || null);
+            }
+            info_date_select.value = today;
+            info_date_select.dispatchEvent(new Event("change", {bubbles: true}));
+        });
+        this.update_date_buttons();
         // when the date has changed, load en draw a new table
         info_date_select.addEventListener("change", async e => {
             e.preventDefault();
@@ -611,12 +650,14 @@ class Info {
             // cannot switch date when current table is not saved yet
             if (this.info_save_btn.classList.contains("blink-button")) {
                 info_date_select.value = this.current_date;
+                this.update_date_buttons();
                 await bootbox.alert("Opgepast, je moet eerst bewaren vooraleer een andere datum te kiezen");
                 return
             }
             //remove local (old) storage
             localStorage.removeItem(`${global_data.school}-info-data`);
             this.current_date = e.target.value;
+            this.update_date_buttons();
             await this.load()
         });
     }
@@ -640,6 +681,7 @@ class Info {
             }
         }
 
+        this.update_date_buttons();
         const resp_info = await fetch_get("infobord.infobord", {school: global_data.school, datum: this.current_date});
         if (resp_info) {
             resp_info.data.sort((a, b) => a.lesuur - b.lesuur);
