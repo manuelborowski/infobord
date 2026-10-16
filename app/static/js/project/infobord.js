@@ -1051,7 +1051,7 @@ const __copy_row_weekly = async (ids) => {
         copy_count++;
         copy_date.setDate(copy_date.getDate() + 7);
     }
-    bootbox.alert(`${copy_count} lijn(en) gekopieerd.`);
+    bootbox.alert(`$Lijn {copy_count} maal gekopieerd.`);
 }
 
 const __get_row_id = (event) => {
